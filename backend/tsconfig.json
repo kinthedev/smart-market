@@ -1,15 +1,14 @@
 {
     "compilerOptions": {
-        // Xóa dòng "types": ["*"] ở đây đi để TypeScript tự động nạp toàn bộ @types
         "target": "ES2022",
-        "module": "commonjs",
-        "moduleResolution": "bundler",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "outDir": "./dist",
         "rootDir": "./",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
+        "forceConsistentCasingInFileNames": true
     },
     "include": [
         "src/**/*",
