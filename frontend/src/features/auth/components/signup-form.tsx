@@ -1,96 +1,85 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { cn } from "cn"
+import { useState } from "react";
+import Link from "next/link";
+import { cn } from "cn";
 
-import { Button } from "@/src/components/ui/button"
-import { Card, CardContent } from "@/src/components/ui/card"
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent } from "@/src/components/ui/card";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-} from "@/src/components/ui/field"
-import { Input } from "@/src/components/ui/input"
-import { authClient } from "@/src/lib/auth-client"
-import { loginSchema } from "@/src/lib/validations/auth"
+} from "@/src/components/ui/field";
+import { Input } from "@/src/components/ui/input";
+import { useAuth } from "../hooks/use-auth";
+import { signupSchema } from "../schemas/auth.schema";
 
-export function LoginForm({
+export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter()
+  const { signup } = useAuth();
 
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
-  })
+    confirmPassword: "",
+  });
 
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [serverError, setServerError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (fieldErrors[name]) {
       setFieldErrors((prev) => {
-        const next = { ...prev }
-        delete next[name]
-        return next
-      })
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
     }
-    if (serverError) setServerError(null)
-  }
+    if (serverError) setServerError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setServerError(null)
+    e.preventDefault();
+    setServerError(null);
 
-    // 1. Validate bằng Zod
-    const validation = loginSchema.safeParse(formData)
+    // 1. Validate dữ liệu form bằng Zod
+    const validation = signupSchema.safeParse(formData);
     if (!validation.success) {
-      const errors: Record<string, string> = {}
+      const errors: Record<string, string> = {};
       for (const issue of validation.error.issues) {
-        const fieldName = issue.path[0] as string
+        const fieldName = issue.path[0] as string;
         if (!errors[fieldName]) {
-          errors[fieldName] = issue.message
+          errors[fieldName] = issue.message;
         }
       }
-      setFieldErrors(errors)
-      return
+      setFieldErrors(errors);
+      return;
     }
 
-    setFieldErrors({})
-    setIsLoading(true)
+    setFieldErrors({});
+    setIsLoading(true);
 
-    // 2. Gọi Better Auth Sign In
-    try {
-      const { error } = await authClient.signIn.email({
-        email: formData.email,
-        password: formData.password,
-        callbackURL: "/",
-      })
+    // 2. Gọi qua useAuth abstraction layer (không gọi trực tiếp better-auth)
+    const result = await signup({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+    });
 
-      if (error) {
-        setServerError(
-          error.message || "Email hoặc mật khẩu không chính xác. Vui lòng thử lại."
-        )
-        setIsLoading(false)
-        return
-      }
-
-      // Đăng nhập thành công -> về trang chủ
-      router.push("/")
-      router.refresh()
-    } catch (err: any) {
-      setServerError(err?.message || "Đã xảy ra lỗi kết nối đến máy chủ.")
-      setIsLoading(false)
+    if (!result.success) {
+      setServerError(result.error || "Đăng ký không thành công. Vui lòng thử lại.");
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -99,9 +88,9 @@ export function LoginForm({
           <form className="p-6 md:p-8" onSubmit={handleSubmit}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-2xl font-bold">Welcome back</h1>
-                <p className="text-balance text-muted-foreground">
-                  Login to your Smart Market account
+                <h1 className="text-2xl font-bold">Create your account</h1>
+                <p className="text-sm text-balance text-muted-foreground">
+                  Enter your details below to create your account
                 </p>
               </div>
 
@@ -110,6 +99,24 @@ export function LoginForm({
                   {serverError}
                 </div>
               )}
+
+              {/* Full Name */}
+              <Field>
+                <FieldLabel htmlFor="name">Full Name</FieldLabel>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Nguyễn Văn A"
+                  value={formData.name}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                />
+                {fieldErrors.name && (
+                  <p className="text-xs text-destructive">{fieldErrors.name}</p>
+                )}
+              </Field>
 
               {/* Email */}
               <Field>
@@ -124,39 +131,67 @@ export function LoginForm({
                   disabled={isLoading}
                   required
                 />
-                {fieldErrors.email && (
+                {fieldErrors.email ? (
                   <p className="text-xs text-destructive">{fieldErrors.email}</p>
+                ) : (
+                  <FieldDescription>
+                    We&apos;ll use this to contact you. We will not share your
+                    email with anyone else.
+                  </FieldDescription>
                 )}
               </Field>
 
-              {/* Password */}
+              {/* Password & Confirm Password */}
               <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm text-muted-foreground underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      required
+                    />
+                    {fieldErrors.password && (
+                      <p className="text-xs text-destructive">
+                        {fieldErrors.password}
+                      </p>
+                    )}
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="confirmPassword">
+                      Confirm Password
+                    </FieldLabel>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      required
+                    />
+                    {fieldErrors.confirmPassword && (
+                      <p className="text-xs text-destructive">
+                        {fieldErrors.confirmPassword}
+                      </p>
+                    )}
+                  </Field>
                 </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  required
-                />
-                {fieldErrors.password && (
-                  <p className="text-xs text-destructive">{fieldErrors.password}</p>
+                {!fieldErrors.password && !fieldErrors.confirmPassword && (
+                  <FieldDescription>
+                    Must be at least 8 characters long.
+                  </FieldDescription>
                 )}
               </Field>
 
               <Field>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : "Login"}
+                  {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
               </Field>
 
@@ -172,7 +207,7 @@ export function LoginForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Login with Apple</span>
+                  <span className="sr-only">Sign up with Apple</span>
                 </Button>
                 <Button variant="outline" type="button" disabled={isLoading}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -181,7 +216,7 @@ export function LoginForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Login with Google</span>
+                  <span className="sr-only">Sign up with Google</span>
                 </Button>
                 <Button variant="outline" type="button" disabled={isLoading}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -190,17 +225,17 @@ export function LoginForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Login with Meta</span>
+                  <span className="sr-only">Sign up with Meta</span>
                 </Button>
               </Field>
 
               <FieldDescription className="text-center">
-                Don&apos;t have an account?{" "}
+                Already have an account?{" "}
                 <Link
-                  href="/signup"
+                  href="/login"
                   className="font-semibold text-primary underline-offset-4 hover:underline"
                 >
-                  Sign up
+                  Log in
                 </Link>
               </FieldDescription>
             </FieldGroup>
@@ -221,5 +256,6 @@ export function LoginForm({
         and <a href="#" className="underline">Privacy Policy</a>.
       </FieldDescription>
     </div>
-  )
+  );
 }
+

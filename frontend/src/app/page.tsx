@@ -1,25 +1,12 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/src/components/ui/button"
-import { Card, CardContent } from "@/src/components/ui/card"
-import { authClient } from "@/src/lib/auth-client"
+import Link from "next/link";
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent } from "@/src/components/ui/card";
+import { useAuth } from "@/src/features/auth";
 
 export default function Home() {
-  const router = useRouter()
-  const { data, isPending } = authClient.useSession()
-  const session = data as { user?: { name?: string; email?: string } } | null
-
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.refresh()
-        },
-      },
-    })
-  }
+  const { user, isLoading, logout } = useAuth();
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-muted/40 p-6">
@@ -35,20 +22,22 @@ export default function Home() {
               </p>
             </div>
 
-            {isPending ? (
+            {isLoading ? (
               <div className="flex flex-col items-center gap-2 py-4">
                 <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <p className="text-xs text-muted-foreground">Đang kiểm tra phiên đăng nhập...</p>
+                <p className="text-xs text-muted-foreground">
+                  Đang kiểm tra phiên đăng nhập...
+                </p>
               </div>
-            ) : session?.user ? (
+            ) : user ? (
               <div className="flex w-full flex-col items-center gap-4 py-2">
                 <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
-                  {session.user.name?.charAt(0)?.toUpperCase() || "U"}
+                  {user.name?.charAt(0)?.toUpperCase() || "U"}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg font-semibold">{session.user.name}</span>
+                  <span className="text-lg font-semibold">{user.name}</span>
                   <span className="text-sm text-muted-foreground">
-                    {session.user.email}
+                    {user.email}
                   </span>
                 </div>
 
@@ -56,7 +45,7 @@ export default function Home() {
                   <Button
                     variant="outline"
                     className="w-full text-destructive hover:bg-destructive/10"
-                    onClick={handleSignOut}
+                    onClick={() => logout()}
                   >
                     Đăng xuất
                   </Button>
@@ -72,7 +61,9 @@ export default function Home() {
                     <Button className="w-full">Đăng nhập</Button>
                   </Link>
                   <Link href="/signup" className="w-full">
-                    <Button variant="outline" className="w-full">Đăng ký</Button>
+                    <Button variant="outline" className="w-full">
+                      Đăng ký
+                    </Button>
                   </Link>
                 </div>
               </div>
@@ -81,5 +72,5 @@ export default function Home() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

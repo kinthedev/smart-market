@@ -1,4 +1,4 @@
-import { SignupForm } from "@/src/components/signup-form";
+import { SignupForm } from "@/src/features/auth";
 
 export const metadata = {
   title: "Đăng ký | Smart Market",

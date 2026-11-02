@@ -1,4 +1,4 @@
-import { LoginForm } from "@/src/components/login-form";
+import { LoginForm } from "@/src/features/auth";
 
 export const metadata = {
   title: "Đăng nhập | Smart Market",

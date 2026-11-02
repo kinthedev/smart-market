@@ -7,36 +7,57 @@ import { errorHandler, notFoundHandler } from "./middlewares/error-handler.js";
 
 const app = express();
 
-// 1. CORS Configuration
+// 1. Cấu hình Trust Proxy (Bắt buộc khi deploy Render / reverse proxy để nhận diện HTTPS và set cookie)
+app.set("trust proxy", 1);
+
+// 2. CORS Configuration hỗ trợ cả Localhost và Vercel Production / Preview URLs
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+].filter(Boolean) as string[];
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Cho phép request không có origin (ví dụ: mobile apps, postman, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Cho phép origin nằm trong danh sách hoặc domain vercel.app
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   })
 );
 
-// 2. Mount Better Auth handler TRƯỚC express.json() để không bị consume request stream
+// 3. Mount Better Auth handler TRƯỚC express.json() để không bị consume request stream
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.all("/api/auth", toNodeHandler(auth));
 
-// 3. Body parsers cho các route API thông thường
+// 4. Body parsers cho các route API thông thường
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 4. Health check
+// 5. Health check endpoint (phục vụ Render health check)
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Smart Market Backend API running",
+    message: "Smart Market Backend API is healthy",
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
-// 5. API v1 Routes
+// 6. API v1 Routes
 app.use("/api/v1/auth", authRouter);
 
-// 6. 404 & Error Handling
+// 7. 404 & Error Handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 export { app };
-

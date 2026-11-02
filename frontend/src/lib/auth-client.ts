@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/react";
+import { env } from "./env";
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:4000", // Trỏ vào Express backend của bạn
+  baseURL: env.BACKEND_URL,
 });
