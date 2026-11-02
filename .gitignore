@@ -1,0 +1,10 @@
+# Ignore an entire folder (trailing slash)
+node_modules/
+build/
+dist/
+
+# Ignore a folder only at the root level
+.next/
+.env
+*.tsbuildinfo
+/generated

@@ -2,17 +2,19 @@
     "compilerOptions": {
         // Xóa dòng "types": ["*"] ở đây đi để TypeScript tự động nạp toàn bộ @types
         "target": "ES2022",
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
+        "module": "commonjs",
+        "moduleResolution": "bundler",
         "outDir": "./dist",
         "rootDir": "./",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
     },
     "include": [
         "src/**/*",
         "*.config.ts" // Thêm dòng này: khớp với prisma7.config.ts và các file config ở thư mục gốc
+        ,
+        "lib"
     ]
 }

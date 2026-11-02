@@ -7,6 +7,9 @@ backend/
 │   └── seed.ts
 │
 ├── src/
+│   ├── lib/
+│   │   ├── prisma.ts
+│   │   └── logger.ts
 │   ├── app.ts
 │   ├── server.ts
 │   │
@@ -74,9 +77,6 @@ backend/
 │   │       ├── admin.route.ts
 │   │       └── admin.controller.ts
 │   │
-│   ├── lib/
-│   │   ├── prisma.ts
-│   │   └── logger.ts
 │   │
 │   ├── utils/
 │   │   └── pagination.ts
