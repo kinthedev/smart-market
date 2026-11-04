@@ -11,9 +11,9 @@ const beVietnam = Be_Vietnam_Pro({
 })
 
 export const metadata: Metadata = {
-  title: 'CamMart - Mua sắm trực tuyến, giá tốt mỗi ngày',
+  title: 'SmartMarket - Mua sắm trực tuyến, giá tốt mỗi ngày',
   description:
-    'CamMart: Flash Sale mỗi ngày, hàng chính hãng, giao nhanh 2H, miễn phí vận chuyển cho thời trang, làm đẹp, thể thao, điện tử và gia dụng.',
+    'SmartMarket: Flash Sale mỗi ngày, hàng chính hãng, giao nhanh 2H, miễn phí vận chuyển cho thời trang, làm đẹp, thể thao, điện tử và gia dụng.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -45,11 +45,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="vi" className={`light ${beVietnam.variable}`}>
-      <body className="font-sans antialiased">
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
-      </body>
-    </html>
+    <div className="font-sans antialiased">
+      {children}
+      {process.env.NODE_ENV === 'production' && <Analytics />}
+    </div>
   )
 }
