@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Ticket, Truck } from 'lucide-react'
 import { cn } from 'cn'
 import { heroSlides } from '@/src/data-seed/shop-data'
+import Link from 'next/link'
 const AUTO_PLAY_MS = 5000
 
 function SideBanners() {
@@ -12,7 +13,7 @@ function SideBanners() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <a
                 href="#"
-                className="group relative flex min-h-32 items-center gap-4 overflow-hidden rounded-sm border border-[#eeeeee] bg-gradient-to-br from-sale to-red-500 p-4 text-white shadow-sm"
+                className="group relative flex min-h-32 items-center gap-4 overflow-hidden rounded  bg-gradient-to-br from-sale to-red-500 p-4 text-white shadow-sm"
             >
                 <span aria-hidden="true" className="absolute -left-2 top-1/2 size-4 -translate-y-1/2 rounded-full bg-background" />
                 <span aria-hidden="true" className="absolute -right-2 top-1/2 size-4 -translate-y-1/2 rounded-full bg-background" />
@@ -29,7 +30,7 @@ function SideBanners() {
 
             <a
                 href="#"
-                className="group relative flex min-h-32 items-center gap-4 overflow-hidden rounded-sm border border-[#eeeeee] bg-gradient-to-br from-amber-500 to-orange-600 p-4 text-white shadow-sm"
+                className="group relative flex min-h-32 items-center gap-4 overflow-hidden rounded  bg-gradient-to-br from-amber-500 to-orange-600 p-4 text-white shadow-sm"
             >
                 <span className="flex size-14 shrink-0 items-center justify-center rounded-sm bg-white/20 transition-transform group-hover:translate-x-1">
                     <Truck className="size-7" aria-hidden="true" />
@@ -61,7 +62,7 @@ export function HeroSection() {
         <section aria-label="Banner nổi bật" className="mx-auto max-w-7xl px-4 pt-4">
             <div className="grid gap-3 lg:grid-cols-3">
                 <div
-                    className="group relative min-h-56 overflow-hidden rounded-sm border border-[#eeeeee] bg-orange-500 shadow-sm sm:min-h-72 lg:col-span-2 lg:min-h-80"
+                    className="group relative min-h-56 overflow-hidden rounded  bg-orange-500 shadow-sm sm:min-h-72 lg:col-span-2 lg:min-h-80"
                     onMouseEnter={() => setPaused(true)}
                     onMouseLeave={() => setPaused(false)}
                     aria-roledescription="carousel"

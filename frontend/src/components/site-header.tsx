@@ -76,14 +76,14 @@ export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderPr
                         <ShoppingBag className="size-5" aria-hidden="true" />
                     </span>
                     <span className="text-2xl font-extrabold tracking-tight">
-                        Cam<span className="text-yellow-300">Mart</span>
+                        Smart<span className="text-yellow-300">Market</span>
                     </span>
                 </a>
 
                 <div className="order-3 w-full md:order-2 md:w-auto md:flex-1">
                     <form
                         role="search"
-                        className="flex rounded-sm border border-[#eeeeee] bg-white p-0 shadow-sm"
+                        className="flex rounded border border-[#eeeeee] bg-white p-0 shadow-sm"
                         onSubmit={(e) => {
                             e.preventDefault()
                             submit(query)
@@ -97,14 +97,14 @@ export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderPr
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Freeship đơn từ 0đ - Tìm sản phẩm, thương hiệu..."
-                            className="h-10 min-w-0 flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-neutral-400"
+                            className="h-10 min-w-0 rounded flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-neutral-400"
                         />
                         <button
                             type="submit"
                             aria-label="Tìm kiếm"
-                            className="flex h-10 w-14 items-center justify-center rounded-[8px] border-2 border-[#eeeeee] bg-primary text-white transition-colors hover:bg-orange-600 sm:w-16"
+                            className="flex h-10 w-14 items-center justify-center rounded border-2 border-[#eeeeee] hover:cursor-pointer bg-primary text-white transition-colors hover:bg-orange-600 sm:w-16"
                         >
-                            <Search className="size-5" aria-hidden="true" />
+                            <Search className="size-4" aria-hidden="true" />
                         </button>
                     </form>
 
@@ -117,7 +117,7 @@ export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderPr
                                         setQuery(keyword)
                                         submit(keyword)
                                     }}
-                                    className={`transition-colors hover:text-white hover:underline ${index === 0 ? 'font-bold text-yellow-300' : ''}`}
+                                    className={`transition-colors hover:text-white hover:cursor-pointer ${index === 0 ? 'font-bold text-yellow-300' : ''}`}
                                 >
                                     {keyword}
                                 </button>
