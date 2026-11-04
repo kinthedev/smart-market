@@ -25,6 +25,15 @@ export function useAuth() {
     [router]
   );
 
+  const socialLogin = useCallback(
+    (
+      provider: "google" | "facebook",
+      callbackURL: string = "/dashboard",
+      errorCallbackURL: string = "/login",
+    ) => AuthService.socialLogin(provider, callbackURL, errorCallbackURL),
+    [],
+  );
+
   const signup = useCallback(
     async (credentials: SignupCredentials, callbackURL: string = "/") => {
       const result = await AuthService.signup(credentials, callbackURL);
@@ -49,6 +58,7 @@ export function useAuth() {
   return {
     ...sessionInfo,
     login,
+    socialLogin,
     signup,
     logout,
   };

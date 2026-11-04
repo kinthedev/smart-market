@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "cn";
@@ -23,7 +23,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const { login } = useAuth();
+  const { login, socialLogin } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -35,6 +35,20 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    const errorDescription = params.get("error_description");
+
+    if (error === "account_not_linked") {
+      setServerError(
+        "Email này đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng email và mật khẩu trước.",
+      );
+    } else if (errorDescription) {
+      setServerError(errorDescription);
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -78,6 +92,20 @@ export function LoginForm({
 
     if (!result.success) {
       setServerError(result.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      setIsLoading(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider: "google" | "facebook") => {
+    setServerError(null);
+    setIsLoading(true);
+
+    const result = await socialLogin(provider, "/dashboard", "/login");
+
+    // Khi OAuth thành công, Better Auth tự chuyển hướng sang provider.
+    // Nhánh này chủ yếu xử lý lỗi cấu hình/CORS/provider để người dùng thấy được.
+    if (!result.success) {
+      setServerError(result.error || `Đăng nhập bằng ${provider} thất bại.`);
       setIsLoading(false);
     }
   };
@@ -188,6 +216,7 @@ export function LoginForm({
                 <Button
                   variant="outline"
                   type="button"
+                  onClick={() => handleSocialLogin("facebook")}
                   disabled={isLoading}
                   aria-label="Đăng nhập bằng Facebook"
                   className="h-10 rounded-sm border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-normal"
@@ -201,6 +230,7 @@ export function LoginForm({
                 <Button
                   variant="outline"
                   type="button"
+                  onClick={() => handleSocialLogin("google")}
                   disabled={isLoading}
                   aria-label="Đăng nhập bằng Google"
                   className="h-10 rounded-sm border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-normal"
