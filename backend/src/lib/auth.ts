@@ -4,8 +4,25 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma.js";
 
 const isProduction = process.env.NODE_ENV === "production";
-const backendUrl = process.env.BETTER_AUTH_URL || "http://localhost:4000";
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
+// Chuẩn hoá URL (bỏ dấu "/" ở cuối) để tránh sai lệch origin/callback.
+const normalizeUrl = (url: string) => url.replace(/\/+$/, "");
+
+// Ở production, bắt buộc phải khai báo URL thật trong .env.
+// Tuyệt đối không fallback về localhost để tránh Google OAuth redirect sai môi trường.
+if (isProduction && !process.env.BETTER_AUTH_URL) {
+  throw new Error("Missing required environment variable: BETTER_AUTH_URL");
+}
+if (isProduction && !process.env.FRONTEND_URL) {
+  throw new Error("Missing required environment variable: FRONTEND_URL");
+}
+
+const backendUrl = normalizeUrl(
+  process.env.BETTER_AUTH_URL || "http://localhost:4000",
+);
+const frontendUrl = normalizeUrl(
+  process.env.FRONTEND_URL || "http://localhost:3000",
+);
 
 const requiredEnv = (name: string, value: string | undefined): string => {
   if (!value) {
@@ -18,11 +35,15 @@ const requiredEnv = (name: string, value: string | undefined): string => {
 const facebookClientId =
   process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
 
-// Danh sách origin được phép truy cập
-const trustedOrigins = [
-  frontendUrl,
-  "http://localhost:3000",
-].filter(Boolean) as string[];
+// Danh sách origin được phép truy cập.
+// Production chỉ tin tưởng FRONTEND_URL trong .env, không thêm localhost.
+const trustedOrigins = Array.from(
+  new Set(
+    isProduction
+      ? [frontendUrl]
+      : [frontendUrl, "http://localhost:3000"],
+  ),
+);
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {

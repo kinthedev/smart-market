@@ -1,4 +1,5 @@
 import { authClient } from "@/src/lib/auth-client";
+import { env } from "@/src/lib/env";
 import type {
   LoginCredentials,
   SignupCredentials,
@@ -44,7 +45,16 @@ export class AuthService {
       return path;
     }
 
-    return new URL(path, window.location.origin).toString();
+    // Ưu tiên URL frontend trong .env (NEXT_PUBLIC_FRONTEND_URL).
+    // env.FRONTEND_URL đã tự fallback về origin trình duyệt ở production,
+    // chỉ dùng localhost khi thực sự chạy ở môi trường dev/SSR.
+    const baseURL =
+      env.FRONTEND_URL ||
+      (typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000");
+
+    return new URL(path, baseURL).toString();
   }
 
   /**
