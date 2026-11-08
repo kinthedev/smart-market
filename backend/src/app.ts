@@ -13,7 +13,9 @@ const app = express();
 app.set("trust proxy", 1);
 
 // 2. CORS Configuration hỗ trợ cả Localhost và Vercel Production / Preview URLs
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  Boolean(process.env.BETTER_AUTH_URL?.startsWith("https://"));
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   // Chỉ cho phép localhost khi chạy ở môi trường development.
