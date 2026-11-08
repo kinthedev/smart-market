@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
     Bell, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ClipboardList,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/src/features/auth/hooks/use-auth'
 import { ProductManager } from '@/src/features/products/components/product-manager'
+import { CustomerManager } from '@/src/features/customers/components/customer-manager'
 
 type Trang = 'Tổng quan' | 'Đơn hàng' | 'Sản phẩm' | 'Khách hàng' | 'Kho hàng'
 
@@ -30,7 +31,44 @@ const menuNhom = [
 
 export function AdminDashboard() {
     const { user: authUser, logout } = useAuth()
-    const [trang, setTrang] = useState<Trang>('Tổng quan')
+    const [trang, setTrangState] = useState<Trang>('Tổng quan')
+
+    // Đồng bộ tab đang chọn với URL hash và localStorage để khi F5 / reload không bị mất tab
+    useEffect(() => {
+        const hashToTab: Record<string, Trang> = {
+            '#tong-quan': 'Tổng quan',
+            '#don-hang': 'Đơn hàng',
+            '#san-pham': 'Sản phẩm',
+            '#khach-hang': 'Khách hàng',
+            '#kho-hang': 'Kho hàng',
+        }
+
+        const currentHash = window.location.hash
+        if (currentHash && hashToTab[currentHash]) {
+            setTrangState(hashToTab[currentHash])
+            return
+        }
+
+        const savedTab = localStorage.getItem('smartmarket_admin_active_tab') as Trang
+        if (savedTab && ['Tổng quan', 'Đơn hàng', 'Sản phẩm', 'Khách hàng', 'Kho hàng'].includes(savedTab)) {
+            setTrangState(savedTab)
+        }
+    }, [])
+
+    const setTrang = (t: Trang) => {
+        setTrangState(t)
+        localStorage.setItem('smartmarket_admin_active_tab', t)
+        const tabToHash: Record<Trang, string> = {
+            'Tổng quan': '#tong-quan',
+            'Đơn hàng': '#don-hang',
+            'Sản phẩm': '#san-pham',
+            'Khách hàng': '#khach-hang',
+            'Kho hàng': '#kho-hang',
+        }
+        if (tabToHash[t]) {
+            window.history.replaceState(null, '', tabToHash[t])
+        }
+    }
     const [moMenu, setMoMenu] = useState(false)
     const [thuGon, setThuGon] = useState(false)
     const [timKiem, setTimKiem] = useState('')
@@ -283,12 +321,7 @@ export function AdminDashboard() {
                 )}
 
                 {trang === 'Khách hàng' && (
-                    <TrangPlaceholder
-                        tieuDe="Quản lý khách hàng"
-                        moTa="Theo dõi thông tin và lịch sử mua hàng của khách hàng."
-                        icon={<Users />}
-                        onNotice={hienThongBao}
-                    />
+                    <CustomerManager onNotice={hienThongBao} />
                 )}
 
                 {trang === 'Kho hàng' && (
