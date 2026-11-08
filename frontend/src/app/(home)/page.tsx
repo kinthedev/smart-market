@@ -18,6 +18,7 @@ export default function Page() {
       name: authUser.name || authUser.email || 'Người dùng',
       email: authUser.email,
       avatarUrl: authUser.image || undefined,
+      isAdmin: authUser.isAdmin,
     }
   }, [authUser])
 

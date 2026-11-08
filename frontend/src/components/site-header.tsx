@@ -6,8 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
 import Link from 'next/link'
 import { hotKeywords, type User } from '@/src/data-seed/shop-data'
 
-const ADMIN_EMAILS = ['admin@smartmarket.com']
-
 type SiteHeaderProps = {
     user?: User | null
     cartCount: number
@@ -44,7 +42,7 @@ export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderPr
 
                 {user ? (
                     <div className="flex items-center gap-3">
-                        {user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()) && (
+                        {user.isAdmin && (
                             <>
                                 <Link
                                     href="/dashboard"

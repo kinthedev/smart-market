@@ -79,7 +79,7 @@ export function AdminDashboard() {
     const [moTaiKhoanMenu, setMoTaiKhoanMenu] = useState(false)
 
     const adminName = authUser?.name || 'Admin SmartMarket'
-    const adminEmail = authUser?.email || 'admin@smartmarket.com'
+    const adminEmail = authUser?.email || ''
     const adminInitials = adminName
         .split(' ')
         .filter(Boolean)

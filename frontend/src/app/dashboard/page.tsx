@@ -5,11 +5,6 @@ import { AdminDashboard } from '@/src/features/dashboard/components/admin-dashbo
 import Link from 'next/link'
 import { ShieldAlert, ArrowLeft, LogIn } from 'lucide-react'
 
-// Danh sách email có quyền quản trị viên cao nhất
-const ADMIN_EMAILS = [
-    'admin@smartmarket.com',
-]
-
 export default function Page() {
     const { user, isLoading } = useAuth()
 
@@ -57,7 +52,7 @@ export default function Page() {
     }
 
     // 3. Đã đăng nhập nhưng không phải admin
-    const isAdmin = Boolean(user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()))
+    const isAdmin = Boolean(user.isAdmin)
 
     if (!isAdmin) {
         return (

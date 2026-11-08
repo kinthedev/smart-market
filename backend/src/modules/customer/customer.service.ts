@@ -1,3 +1,4 @@
+import { ADMIN_EMAIL } from "../../lib/admin.js";
 import { prisma } from "../../lib/prisma.js";
 
 export interface CreateCustomerInput {
@@ -32,9 +33,7 @@ export class CustomerService {
     }
 
     // Lọc bỏ tài khoản admin ra khỏi danh sách khách hàng
-    where.email = {
-      not: "admin@smartmarket.com",
-    };
+    where.email = { not: ADMIN_EMAIL };
 
     const users = await prisma.user.findMany({
       where,

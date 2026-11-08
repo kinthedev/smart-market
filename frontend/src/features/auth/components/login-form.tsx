@@ -92,17 +92,13 @@ export function LoginForm({
     setFieldErrors({});
     setIsLoading(true);
 
-    // 2. Xác định đích đến: Nếu là tài khoản Admin thì chuyển thẳng vào /dashboard, ngược lại về trang chính /
-    const isAdminAccount = formData.email.trim().toLowerCase() === "admin@smartmarket.com";
-    const targetURL = isAdminAccount ? "/dashboard" : "/";
-
-    // Gọi qua useAuth abstraction layer
+    // Gọi qua useAuth abstraction layer.
+    // Hook sẽ tự chuyển admin về /dashboard, user thường về trang chủ.
     const result = await login(
       {
         email: formData.email,
         password: formData.password,
-      },
-      targetURL
+      }
     );
 
     if (!result.success) {

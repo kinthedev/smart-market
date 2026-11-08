@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
+import { isAdminEmail } from "../../lib/admin.js";
 import { CustomerService } from "./customer.service.js";
-
-const ADMIN_EMAILS = ["admin@smartmarket.com"];
 
 export class CustomerController {
   static async getCustomers(req: Request, res: Response) {
@@ -28,7 +27,7 @@ export class CustomerController {
   static async createCustomer(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (!isAdminEmail(user?.email)) {
         return res.status(403).json({ success: false, message: "Không có quyền thực hiện thao tác này." });
       }
 
@@ -42,7 +41,7 @@ export class CustomerController {
   static async updateCustomer(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (!isAdminEmail(user?.email)) {
         return res.status(403).json({ success: false, message: "Không có quyền thực hiện thao tác này." });
       }
 
@@ -56,7 +55,7 @@ export class CustomerController {
   static async deleteCustomer(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (!isAdminEmail(user?.email)) {
         return res.status(403).json({ success: false, message: "Không có quyền thực hiện thao tác này." });
       }
 
@@ -70,7 +69,7 @@ export class CustomerController {
   static async toggleStatus(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (!isAdminEmail(user?.email)) {
         return res.status(403).json({ success: false, message: "Không có quyền thực hiện thao tác này." });
       }
 

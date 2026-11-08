@@ -99,7 +99,7 @@ backend/src/
 
 ### 4.3. Xác thực & Phân quyền (Auth & Guards)
 
-- **Admin Email duy nhất:** `admin@smartmarket.com`.
+- **Tài khoản Admin:** xác định bằng 2 biến môi trường `ADMIN_EMAIL` + `ADMIN_PASSWORD` (không dùng cột `role` trong DB). Backend tự đồng bộ tài khoản admin vào database mỗi lần khởi động (`backend/src/lib/admin-sync.ts`), sau đó gắn cờ `isAdmin` vào session qua Better Auth `customSession`.
 - **Dashboard Guard:** Chỉ tài khoản admin mới được phép truy cập `/dashboard`. Khách hoặc user thường sẽ bị chặn (401 / 403).
 - **Trang Login/Signup:** Nếu người dùng đã đăng nhập, truy cập `/login` hoặc `/signup` phải tự động redirect về trang chủ `/`.
 - **Trang chủ:** Khi admin đăng nhập sẽ hiển thị một nút nhỏ **Dashboard** trên topbar để truy cập trang quản trị.

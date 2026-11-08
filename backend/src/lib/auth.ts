@@ -1,6 +1,8 @@
 import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { customSession } from "better-auth/plugins";
+import { isAdminEmail } from "./admin.js";
 import { prisma } from "./prisma.js";
 
 // Chuẩn hoá URL (bỏ dấu "/" ở cuối) để tránh sai lệch origin/callback.
@@ -54,6 +56,14 @@ export const auth = betterAuth({
   }),
   secret: requiredEnv("BETTER_AUTH_SECRET", process.env.BETTER_AUTH_SECRET),
   baseURL: backendUrl,
+  plugins: [
+    // Quyền admin suy ra từ biến môi trường ADMIN_EMAIL (không lưu cột role trong DB).
+    // Trả thêm cờ isAdmin trong session để frontend biết hiển thị Dashboard hay không.
+    customSession(async ({ user, session }) => ({
+      user: { ...user, isAdmin: isAdminEmail(user.email) },
+      session,
+    })),
+  ],
   trustedOrigins: [
     ...trustedOrigins,
     "https://*.vercel.app",

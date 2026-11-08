@@ -17,7 +17,10 @@ export function useAuth() {
     async (credentials: LoginCredentials, callbackURL: string = "/") => {
       const result = await AuthService.login(credentials, callbackURL);
       if (result.success) {
-        router.push(callbackURL);
+        // Đọc lại session để biết tài khoản vừa đăng nhập có phải admin không.
+        // Backend trả cờ isAdmin dựa trên ADMIN_EMAIL trong biến môi trường.
+        const session = await AuthService.getSession();
+        router.push(session?.user?.isAdmin ? "/dashboard" : callbackURL);
         router.refresh();
       }
       return result;

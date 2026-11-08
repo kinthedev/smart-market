@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
+import { isAdminEmail } from "../../lib/admin.js";
 import { ProductService } from "./product.service.js";
-
-const ADMIN_EMAILS = ["admin@smartmarket.com"];
 
 export class ProductController {
   static async getCategories(req: Request, res: Response) {
@@ -16,7 +15,7 @@ export class ProductController {
   static async createCategory(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (!isAdminEmail(user?.email)) {
         return res.status(403).json({ success: false, message: "Không có quyền thực hiện thao tác này." });
       }
 
@@ -51,7 +50,7 @@ export class ProductController {
   static async createProduct(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (!isAdminEmail(user?.email)) {
         return res.status(403).json({ success: false, message: "Không có quyền thực hiện thao tác này." });
       }
 
@@ -65,7 +64,7 @@ export class ProductController {
   static async updateProduct(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (!isAdminEmail(user?.email)) {
         return res.status(403).json({ success: false, message: "Không có quyền thực hiện thao tác này." });
       }
 
@@ -79,7 +78,7 @@ export class ProductController {
   static async deleteProduct(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (!isAdminEmail(user?.email)) {
         return res.status(403).json({ success: false, message: "Không có quyền thực hiện thao tác này." });
       }
 

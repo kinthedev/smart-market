@@ -193,6 +193,23 @@ export class AuthService {
   }
 
   /**
+   * Lấy session hiện tại từ server.
+   * Dùng sau khi đăng nhập để đọc cờ isAdmin do backend trả về.
+   */
+  static async getSession(): Promise<{
+    user: AuthUser;
+    session: AuthSession;
+  } | null> {
+    try {
+      const { data } = await authClient.getSession();
+      if (!data?.user) return null;
+      return data as unknown as { user: AuthUser; session: AuthSession };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * React hook theo dõi trạng thái session
    */
   static useSession(): {

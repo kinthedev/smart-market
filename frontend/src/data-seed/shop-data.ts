@@ -2,6 +2,7 @@ export type User = {
   name: string
   email?: string
   avatarUrl?: string
+  isAdmin?: boolean
 }
 
 export type ProductBadge = 'Chính hãng' | 'Yêu thích' | 'Giao 2H'

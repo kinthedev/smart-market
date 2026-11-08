@@ -4,6 +4,7 @@ export interface AuthUser {
   email: string;
   emailVerified: boolean;
   image?: string | null;
+  isAdmin?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
