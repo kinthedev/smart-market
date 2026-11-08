@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Ticket, Truck } from 'lucide-react'
 import { cn } from 'cn'
 import { heroSlides } from '@/src/data-seed/shop-data'
@@ -76,14 +75,6 @@ export function HeroSection() {
                                 i === index ? 'opacity-100' : 'pointer-events-none opacity-0'
                             )}
                         >
-                            <Image
-                                src={slide.image}
-                                alt=""
-                                fill
-                                sizes="(min-width: 1280px) 840px, (min-width: 1024px) 66vw, 100vw"
-                                className="object-cover object-right"
-                                priority={i === 0}
-                            />
                             <div className={cn('absolute inset-0 bg-gradient-to-r', slide.overlay)} />
                             <div className="relative flex h-full max-w-[70%] flex-col justify-center gap-2 p-5 sm:max-w-[62%] sm:gap-3 sm:p-8">
                                 <p className="w-fit rounded-sm bg-white/95 px-2 py-0.5 text-[11px] font-bold uppercase text-sale sm:text-xs">

@@ -49,6 +49,10 @@ export function FlashSale({
         el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: 'smooth' })
     }
 
+    if (!flashSaleProducts || flashSaleProducts.length === 0) {
+        return null
+    }
+
     return (
         <section id="flash-sale" aria-labelledby="flash-sale-heading" className="mx-auto max-w-7xl scroll-mt-4 px-4 pt-3">
             <div className="bg-white shadow-sm">

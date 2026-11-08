@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "cn";
 
@@ -23,7 +24,14 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const { login, socialLogin } = useAuth();
+  const router = useRouter();
+  const { user, isLoading: isAuthLoading, login, socialLogin } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      router.replace("/");
+    }
+  }, [user, isAuthLoading, router]);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -84,11 +92,18 @@ export function LoginForm({
     setFieldErrors({});
     setIsLoading(true);
 
-    // 2. Gọi qua useAuth abstraction layer
-    const result = await login({
-      email: formData.email,
-      password: formData.password,
-    });
+    // 2. Xác định đích đến: Nếu là tài khoản Admin thì chuyển thẳng vào /dashboard, ngược lại về trang chính /
+    const isAdminAccount = formData.email.trim().toLowerCase() === "admin@smartmarket.com";
+    const targetURL = isAdminAccount ? "/dashboard" : "/";
+
+    // Gọi qua useAuth abstraction layer
+    const result = await login(
+      {
+        email: formData.email,
+        password: formData.password,
+      },
+      targetURL
+    );
 
     if (!result.success) {
       setServerError(result.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");

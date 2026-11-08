@@ -3,6 +3,7 @@ import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
 import { authRouter } from "./modules/auth/auth.route.js";
+import { productRouter } from "./modules/product/product.route.js";
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler.js";
 
 const app = express();
@@ -55,6 +56,7 @@ app.get("/", (req, res) => {
 
 // 6. API v1 Routes
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1", productRouter);
 
 // 7. 404 & Error Handling
 app.use(notFoundHandler);

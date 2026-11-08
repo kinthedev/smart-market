@@ -13,6 +13,32 @@ import type {
  * không phụ thuộc trực tiếp vào thư viện Better Auth bên dưới.
  */
 export class AuthService {
+  private static formatErrorMessage(error: any, defaultMsg: string): string {
+    const rawMessage = error?.message || error || "";
+    if (typeof rawMessage === "string") {
+      const lower = rawMessage.toLowerCase();
+      if (lower.includes("invalid password") || lower.includes("invalid email or password") || lower.includes("invalid credentials")) {
+        return "Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.";
+      }
+      if (lower.includes("user already exists") || lower.includes("email already in use")) {
+        return "Email này đã được sử dụng. Vui lòng chọn email khác hoặc đăng nhập.";
+      }
+      if (lower.includes("user not found")) {
+        return "Tài khoản không tồn tại trên hệ thống.";
+      }
+      if (lower.includes("failed to fetch") || lower.includes("network error") || lower.includes("connect")) {
+        return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau.";
+      }
+      if (lower.includes("rate limit") || lower.includes("too many requests")) {
+        return "Bạn đã thao tác quá nhiều lần. Vui lòng thử lại sau vài phút.";
+      }
+      if (lower.includes("password is too short")) {
+        return "Mật khẩu quá ngắn, vui lòng nhập tối thiểu 8 ký tự.";
+      }
+    }
+    return defaultMsg;
+  }
+
   private static frontendURL(path: string): string {
     if (path.startsWith("http://") || path.startsWith("https://")) {
       return path;
@@ -40,7 +66,10 @@ export class AuthService {
       if (response.error) {
         return {
           success: false,
-          error: response.error.message || `Đăng nhập bằng ${provider} thất bại.`,
+          error: AuthService.formatErrorMessage(
+            response.error,
+            `Đăng nhập bằng ${provider} thất bại. Vui lòng thử lại.`
+          ),
         };
       }
 
@@ -51,7 +80,10 @@ export class AuthService {
     } catch (err: any) {
       return {
         success: false,
-        error: err?.message || "Không thể kết nối đến máy chủ xác thực.",
+        error: AuthService.formatErrorMessage(
+          err,
+          "Không thể kết nối đến máy chủ xác thực. Vui lòng thử lại."
+        ),
       };
     }
   }
@@ -73,9 +105,10 @@ export class AuthService {
       if (response.error) {
         return {
           success: false,
-          error:
-            response.error.message ||
-            "Email hoặc mật khẩu không chính xác. Vui lòng thử lại.",
+          error: AuthService.formatErrorMessage(
+            response.error,
+            "Email hoặc mật khẩu không chính xác. Vui lòng thử lại."
+          ),
         };
       }
 
@@ -86,7 +119,10 @@ export class AuthService {
     } catch (err: any) {
       return {
         success: false,
-        error: err?.message || "Đã xảy ra lỗi kết nối đến máy chủ xác thực.",
+        error: AuthService.formatErrorMessage(
+          err,
+          "Đã xảy ra lỗi kết nối đến máy chủ xác thực. Vui lòng thử lại."
+        ),
       };
     }
   }
@@ -109,9 +145,10 @@ export class AuthService {
       if (response.error) {
         return {
           success: false,
-          error:
-            response.error.message ||
-            "Đăng ký không thành công. Vui lòng thử lại.",
+          error: AuthService.formatErrorMessage(
+            response.error,
+            "Đăng ký không thành công. Vui lòng thử lại."
+          ),
         };
       }
 
@@ -122,7 +159,10 @@ export class AuthService {
     } catch (err: any) {
       return {
         success: false,
-        error: err?.message || "Đã xảy ra lỗi kết nối đến máy chủ xác thực.",
+        error: AuthService.formatErrorMessage(
+          err,
+          "Đã xảy ra lỗi kết nối đến máy chủ xác thực. Vui lòng thử lại."
+        ),
       };
     }
   }
@@ -137,7 +177,7 @@ export class AuthService {
     } catch (err: any) {
       return {
         success: false,
-        error: err?.message || "Đăng xuất thất bại.",
+        error: AuthService.formatErrorMessage(err, "Đăng xuất thất bại."),
       };
     }
   }

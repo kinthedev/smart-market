@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { CircleHelp, Link2, LogOut, Search, ShoppingBag, ShoppingCart, Smartphone } from 'lucide-react'
+import { CircleHelp, LayoutDashboard, Link2, LogOut, Search, ShoppingBag, ShoppingCart, Smartphone } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
-import { hotKeywords, type User } from '@/src/data-seed/shop-data'
 import Link from 'next/link'
+import { hotKeywords, type User } from '@/src/data-seed/shop-data'
+
+const ADMIN_EMAILS = ['admin@smartmarket.com']
+
 type SiteHeaderProps = {
     user?: User | null
     cartCount: number
@@ -41,15 +44,32 @@ export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderPr
 
                 {user ? (
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
+                        {user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()) && (
+                            <>
+                                <Link
+                                    href="/dashboard"
+                                    className="flex items-center gap-1.5 rounded bg-white/20 px-2 py-0.5 text-[11px] font-semibold text-white shadow-xs backdrop-blur-xs transition-all hover:bg-white hover:text-[#5b5bd6]"
+                                    title="Truy cập trang Quản trị cửa hàng"
+                                >
+                                    <LayoutDashboard className="size-3.5" />
+                                    <span>Dashboard</span>
+                                </Link>
+                                <span aria-hidden="true" className="h-3 w-px bg-white/50" />
+                            </>
+                        )}
+                        <Link
+                            href="/account"
+                            className="flex items-center gap-2 transition-opacity hover:opacity-90"
+                            title="Quản lý tài khoản"
+                        >
                             <Avatar size="sm">
                                 {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
                                 <AvatarFallback className="bg-white text-[10px] font-bold text-primary">
                                     {user.name.slice(0, 1).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="max-w-28 truncate font-medium">{user.name}</span>
-                        </div>
+                            <span className="max-w-28 truncate font-medium hover:underline">{user.name}</span>
+                        </Link>
                         <span aria-hidden="true" className="h-3 w-px bg-white/50" />
                         <button
                             type="button"
@@ -71,7 +91,7 @@ export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderPr
             </div>
 
             <div className="mx-auto flex max-w-7xl flex-wrap items-start gap-x-6 gap-y-2 px-4 pb-3 pt-2 md:flex-nowrap md:gap-x-10">
-                <a href="#" className="order-1 flex h-10 shrink-0 items-center gap-2" aria-label="CamMart - Trang chủ">
+                <a href="/" className="order-1 flex h-10 shrink-0 items-center gap-2" aria-label="CamMart - Trang chủ">
                     <span className="flex size-9 items-center justify-center rounded-sm bg-white text-primary">
                         <ShoppingBag className="size-5" aria-hidden="true" />
                     </span>
@@ -97,12 +117,12 @@ export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderPr
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Freeship đơn từ 0đ - Tìm sản phẩm, thương hiệu..."
-                            className="h-10 min-w-0 rounded flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-neutral-400"
+                            className="h-10 min-w-0  flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-neutral-400"
                         />
                         <button
                             type="submit"
                             aria-label="Tìm kiếm"
-                            className="flex h-10 w-14 items-center justify-center rounded border-2 border-[#eeeeee] hover:cursor-pointer bg-primary text-white transition-colors hover:bg-orange-600 sm:w-16"
+                            className="flex h-10 w-14 items-center justify-center  border-2 border-[#eeeeee] hover:cursor-pointer bg-primary text-white transition-colors hover:bg-orange-600 sm:w-16"
                         >
                             <Search className="size-4" aria-hidden="true" />
                         </button>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "cn";
 
@@ -22,7 +23,14 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const { signup, socialLogin } = useAuth();
+  const router = useRouter();
+  const { user, isLoading: isAuthLoading, signup, socialLogin } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      router.replace("/");
+    }
+  }, [user, isAuthLoading, router]);
 
   const [formData, setFormData] = useState({
     name: "",
