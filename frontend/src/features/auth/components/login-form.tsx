@@ -100,7 +100,7 @@ export function LoginForm({
     setServerError(null);
     setIsLoading(true);
 
-    const result = await socialLogin(provider, "/dashboard", "/login");
+    const result = await socialLogin(provider, "/", "/login");
 
     // Khi OAuth thành công, Better Auth tự chuyển hướng sang provider.
     // Nhánh này chủ yếu xử lý lỗi cấu hình/CORS/provider để người dùng thấy được.

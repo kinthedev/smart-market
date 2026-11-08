@@ -102,7 +102,7 @@ export function SignupForm({
     setServerError(null);
     setIsLoading(true);
 
-    const result = await socialLogin(provider, "/dashboard", "/signup");
+    const result = await socialLogin(provider, "/", "/signup");
 
     // Better Auth sẽ chuyển hướng sang Google/Facebook khi request thành công.
     if (!result.success) {

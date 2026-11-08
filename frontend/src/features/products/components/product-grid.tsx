@@ -21,9 +21,10 @@ type ProductGridProps = {
     products: Product[]
     query?: string
     onAddToCart?: (product: Product) => void
+    onProductClick?: (product: Product) => void
 }
 
-export function ProductGrid({ products, query, onAddToCart }: ProductGridProps) {
+export function ProductGrid({ products, query, onAddToCart, onProductClick }: ProductGridProps) {
     const [activeTab, setActiveTab] = useState<TabId>('for-you')
     const [visible, setVisible] = useState(PAGE_SIZE)
 
@@ -94,7 +95,7 @@ export function ProductGrid({ products, query, onAddToCart }: ProductGridProps) 
                 <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                     {shown.map((product) => (
                         <li key={product.id}>
-                            <ProductCard product={product} onAddToCart={onAddToCart} />
+                            <ProductCard product={product} onAddToCart={onAddToCart} onProductClick={onProductClick} />
                         </li>
                     ))}
                 </ul>

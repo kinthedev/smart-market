@@ -4,7 +4,11 @@ import { cn } from 'cn'
 import { Price } from '@/src//features/products/components/price'
 import { discountPercent, formatSold, type FlashSaleProduct, type Product, type ProductBadge } from '@/src/data-seed/shop-data'
 
-type ProductCardProps = { product: Product | FlashSaleProduct; onAddToCart?: (product: Product) => void }
+type ProductCardProps = {
+    product: Product | FlashSaleProduct
+    onAddToCart?: (product: Product) => void
+    onProductClick?: (product: Product | FlashSaleProduct) => void
+}
 
 const badgeStyles: Record<ProductBadge, { className: string; icon: typeof Heart }> = {
     'Chính hãng': { className: 'bg-white text-primary ring-1 ring-[#eeeeee]', icon: ShieldCheck },
@@ -26,14 +30,21 @@ function SoldBar({ sold, stock }: { sold: number; stock: number }) {
     )
 }
 
-export function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export function ProductCard({ product, onAddToCart, onProductClick }: ProductCardProps) {
     const flash = 'stock' in product ? product : null
     const discount = flash?.discount ?? discountPercent(product.price, product.originalPrice)
     const badge = product.badge ? badgeStyles[product.badge] : null
     const BadgeIcon = badge?.icon
 
+    const handleClick = () => {
+        onProductClick?.(product)
+    }
+
     return (
-        <article className="group relative flex h-full -translate-y-0 flex-col overflow-hidden rounded-sm bg-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+        <article
+            onClick={handleClick}
+            className="group relative flex h-full -translate-y-0 cursor-pointer flex-col overflow-hidden rounded-sm bg-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
             <div className="relative aspect-square overflow-hidden bg-muted">
                 <Image src={product.image} alt={product.name} fill sizes="(min-width: 1280px) 200px, (min-width: 1024px) 20vw, (min-width: 640px) 25vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
                 {product.badge && badge && BadgeIcon && (
@@ -45,7 +56,10 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
                 {product.isNew && <span className="absolute bottom-2 left-2 rounded-sm bg-neutral-900/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white">Mới</span>}
                 <button
                     type="button"
-                    onClick={() => onAddToCart?.(product)}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onAddToCart?.(product)
+                    }}
                     className="absolute inset-x-2 bottom-2 flex h-8 translate-y-2 items-center justify-center gap-1 rounded-sm bg-primary/95 text-xs font-bold text-white opacity-0 shadow transition-all duration-200 hover:bg-primary group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
                 >
                     <ShoppingCart className="size-3.5" aria-hidden="true" /> Tìm đồ tương tự

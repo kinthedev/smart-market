@@ -34,7 +34,13 @@ function CountdownTimer() {
     )
 }
 
-export function FlashSale({ onAddToCart }: { onAddToCart?: (product: Product) => void }) {
+export function FlashSale({
+    onAddToCart,
+    onProductClick,
+}: {
+    onAddToCart?: (product: Product) => void
+    onProductClick?: (product: Product) => void
+}) {
     const scroller = useRef<HTMLUListElement>(null)
 
     const scrollBy = (direction: 1 | -1) => {
@@ -69,7 +75,7 @@ export function FlashSale({ onAddToCart }: { onAddToCart?: (product: Product) =>
                     >
                         {flashSaleProducts.map((product) => (
                             <li key={product.id} className="w-40 shrink-0 snap-start sm:w-44 lg:w-48">
-                                <ProductCard product={product} onAddToCart={onAddToCart} />
+                                <ProductCard product={product} onAddToCart={onAddToCart} onProductClick={onProductClick} />
                             </li>
                         ))}
                     </ul>

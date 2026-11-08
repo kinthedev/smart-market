@@ -27,7 +27,7 @@ export class AuthService {
    */
   static async socialLogin(
     provider: "google" | "facebook",
-    callbackURL: string = "/dashboard",
+    callbackURL: string = "/",
     errorCallbackURL: string = "/login",
   ): Promise<AuthActionResult> {
     try {

@@ -28,7 +28,7 @@ export function useAuth() {
   const socialLogin = useCallback(
     (
       provider: "google" | "facebook",
-      callbackURL: string = "/dashboard",
+      callbackURL: string = "/",
       errorCallbackURL: string = "/login",
     ) => AuthService.socialLogin(provider, callbackURL, errorCallbackURL),
     [],

@@ -14,6 +14,7 @@ export type ProductHomePageProps = {
     cartCount?: number
     onLogout?: () => void
     onAddToCart?: (product: Product) => void
+    onProductClick?: (product: Product) => void
     onSearch?: (query: string) => void
 }
 
@@ -30,6 +31,7 @@ export function ProductHomePage({
     cartCount = 0,
     onLogout,
     onAddToCart,
+    onProductClick,
     onSearch,
 }: ProductHomePageProps) {
     const [query, setQuery] = useState('')
@@ -58,8 +60,8 @@ export function ProductHomePage({
             <main>
                 <HeroSection />
                 <CategoryGrid />
-                <FlashSale onAddToCart={onAddToCart} />
-                <ProductGrid products={filtered} query={query} onAddToCart={onAddToCart} />
+                <FlashSale onAddToCart={onAddToCart} onProductClick={onProductClick} />
+                <ProductGrid products={filtered} query={query} onAddToCart={onAddToCart} onProductClick={onProductClick} />
             </main>
             <SiteFooter />
         </div>
