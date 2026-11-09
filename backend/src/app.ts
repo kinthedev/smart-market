@@ -6,6 +6,10 @@ import { authRouter } from "./modules/auth/auth.route.js";
 import { productRouter } from "./modules/product/product.route.js";
 import { customerRouter } from "./modules/customer/customer.route.js";
 import uploadRouter from "./modules/upload/upload.route.js";
+import { orderRouter } from "./modules/order/order.route.js";
+import { wishlistRouter } from "./modules/wishlist/wishlist.route.js";
+import { reviewRouter } from "./modules/review/review.route.js";
+import { commentRouter } from "./modules/comment/comment.route.js";
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler.js";
 
 const app = express();
@@ -64,6 +68,10 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1", productRouter);
 app.use("/api/v1", customerRouter);
+app.use("/api/v1", orderRouter);
+app.use("/api/v1", wishlistRouter);
+app.use("/api/v1", reviewRouter);
+app.use("/api/v1", commentRouter);
 app.use("/api/v1/upload", uploadRouter);
 
 // 7. 404 & Error Handling

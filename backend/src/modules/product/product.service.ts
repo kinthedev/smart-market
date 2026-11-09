@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
+import { withProductStats } from "../../lib/product-stats.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import type {
   CreateProductInput,
@@ -143,11 +144,14 @@ export class ProductService {
         : [];
       const itemsById = new Map(items.map((item) => [item.id, item]));
 
+      const orderedItems = ids.flatMap((id) => {
+        const item = itemsById.get(id);
+        return item ? [item] : [];
+      });
+      const itemsWithStats = await withProductStats(orderedItems);
+
       return {
-        items: ids.flatMap((id) => {
-          const item = itemsById.get(id);
-          return item ? [item] : [];
-        }),
+        items: itemsWithStats,
         pagination: {
           page,
           limit,
@@ -200,7 +204,7 @@ export class ProductService {
     ]);
 
     return {
-      items,
+      items: await withProductStats(items),
       pagination: {
         page,
         limit,
@@ -211,7 +215,7 @@ export class ProductService {
   }
 
   static async getProductById(id: string) {
-    return prisma.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: { id },
       include: {
         category: true,
@@ -221,6 +225,11 @@ export class ProductService {
         variants: true,
       },
     });
+
+    if (!product) return null;
+
+    const [productWithStats] = await withProductStats([product]);
+    return productWithStats;
   }
 
   static async createProduct(data: CreateProductInput) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { WishlistProvider } from "@/src/features/wishlist/components/wishlist-provider";
 
 export const metadata: Metadata = {
   title: "Smart Market | Sàn Thương Mại Điện Tử Thông Minh",
@@ -28,7 +29,7 @@ export default function RootLayout({
 
       </head>
       <body className="font-sans antialiased text-foreground bg-background">
-        {children}
+        <WishlistProvider>{children}</WishlistProvider>
       </body>
     </html>
   );

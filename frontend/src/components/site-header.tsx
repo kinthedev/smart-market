@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { CircleHelp, LayoutDashboard, Link2, LogOut, Search, ShoppingBag, ShoppingCart, Smartphone } from 'lucide-react'
+import { CircleHelp, Heart, LayoutDashboard, Link2, LogOut, Search, ShoppingBag, ShoppingCart, Smartphone } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { hotKeywords, type User } from '@/src/data-seed/shop-data'
 import { useCart } from '@/src/features/cart/hooks/use-cart'
+import { useWishlist } from '@/src/features/wishlist/components/wishlist-provider'
 
 type SiteHeaderProps = {
     user?: User | null
@@ -24,6 +25,7 @@ export function SiteHeader({ user, onLogout, onSearch }: SiteHeaderProps) {
     const [query, setQuery] = useState('')
     const router = useRouter()
     const { totalQuantity } = useCart()
+    const { count: wishlistCount } = useWishlist()
 
     const submit = (value: string) => {
         const keyword = value.trim()
@@ -159,18 +161,34 @@ export function SiteHeader({ user, onLogout, onSearch }: SiteHeaderProps) {
                     </ul>
                 </div>
 
-                <Link
-                    href="/cart"
-                    aria-label={`Giỏ hàng, ${totalQuantity} sản phẩm`}
-                    className="relative order-2 ml-auto flex size-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/15 md:order-3 md:ml-0"
-                >
-                    <ShoppingCart className="size-7" aria-hidden="true" />
-                    {totalQuantity > 0 && (
-                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-sale px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white">
-                            {totalQuantity > 99 ? '99+' : totalQuantity}
-                        </span>
-                    )}
-                </Link>
+                <div className="order-2 ml-auto flex items-center gap-1 md:order-3 md:ml-0">
+                    <Link
+                        href="/wishlist"
+                        aria-label={`Sản phẩm yêu thích, ${wishlistCount} sản phẩm`}
+                        title="Sản phẩm yêu thích"
+                        className="relative flex size-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/15"
+                    >
+                        <Heart className="size-6" aria-hidden="true" />
+                        {wishlistCount > 0 && (
+                            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-sale px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white">
+                                {wishlistCount > 99 ? '99+' : wishlistCount}
+                            </span>
+                        )}
+                    </Link>
+
+                    <Link
+                        href="/cart"
+                        aria-label={`Giỏ hàng, ${totalQuantity} sản phẩm`}
+                        className="relative flex size-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/15"
+                    >
+                        <ShoppingCart className="size-7" aria-hidden="true" />
+                        {totalQuantity > 0 && (
+                            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-sale px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white">
+                                {totalQuantity > 99 ? '99+' : totalQuantity}
+                            </span>
+                        )}
+                    </Link>
+                </div>
             </div>
         </header>
     )

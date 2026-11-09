@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Flame, Heart, ShieldCheck, ShoppingCart, Star, Zap } from 'lucide-react'
 import { cn } from 'cn'
 import { Price } from '@/src//features/products/components/price'
+import { WishlistButton } from '@/src/features/wishlist/components/wishlist-button'
 import { discountPercent, formatSold, type FlashSaleProduct, type Product, type ProductBadge } from '@/src/data-seed/shop-data'
 import type { Product as CatalogProduct } from '../types/product.types'
 
@@ -82,8 +83,9 @@ export function ProductCard({ product, onAddToCart, onProductClick }: ProductCar
                         <BadgeIcon className="size-3" aria-hidden="true" /> {productBadge}
                     </span>
                 )}
-                {discount > 0 && <span className="absolute right-0 top-0 rounded-bl-sm bg-orange-50 px-1.5 py-1 text-xs font-semibold leading-tight text-primary">-{discount}%</span>}
+                {discount > 0 && <span className="absolute right-0 top-11 rounded-bl-sm bg-orange-50 px-1.5 py-1 text-xs font-semibold leading-tight text-primary">-{discount}%</span>}
                 {isNew && <span className="absolute bottom-2 left-2 rounded-sm bg-neutral-900/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white">Mới</span>}
+                {catalogProduct && <WishlistButton productId={product.id} />}
                 <button
                     type="button"
                     onClick={(e) => {
@@ -119,7 +121,18 @@ export function ProductCard({ product, onAddToCart, onProductClick }: ProductCar
                                 <span>Đã bán {formatSold(product.sold)}</span>
                             </>
                         ) : (
-                            <span className="truncate">{product.category?.name ?? 'Sản phẩm'}</span>
+                            <span className="flex min-w-0 items-center gap-1">
+                                <span className="truncate">{product.category?.name ?? 'Sản phẩm'}</span>
+                                {product.reviewCount ? (
+                                    <>
+                                        <span className="text-slate-300">|</span>
+                                        <span className="flex shrink-0 items-center gap-0.5">
+                                            <Star className="size-3 fill-amber-400 text-amber-400" aria-hidden="true" />
+                                            {(product.ratingAvg ?? 0).toFixed(1)} ({product.reviewCount})
+                                        </span>
+                                    </>
+                                ) : null}
+                            </span>
                         )}
                     </div>
                 )}

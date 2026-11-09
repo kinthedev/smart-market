@@ -20,6 +20,9 @@ import { SiteHeader } from "@/src/components/site-header";
 import { SiteFooter } from "@/src/components/site-footer";
 import { useAuth } from "@/src/features/auth/hooks/use-auth";
 import { useCart } from "@/src/features/cart/hooks/use-cart";
+import { WishlistButton } from "@/src/features/wishlist/components/wishlist-button";
+import { ReviewSection } from "@/src/features/reviews/components/review-section";
+import { CommentSection } from "@/src/features/comments/components/comment-section";
 import type { User } from "@/src/data-seed/shop-data";
 import type {
   Product as CatalogProduct,
@@ -50,6 +53,9 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState<
+    "description" | "reviews" | "comments"
+  >("description");
   const [notice, setNotice] = useState("");
   const [noticeType, setNoticeType] = useState<"success" | "error">("success");
 
@@ -289,6 +295,12 @@ export default function ProductDetailPage() {
                   <span className="text-xs text-neutral-400">
                     SKU: {product.sku}
                   </span>
+                  <WishlistButton
+                    productId={product.id}
+                    variant="inline"
+                    showLabel
+                    className="ml-auto"
+                  />
                 </div>
 
                 <h1 className="mt-2 text-xl font-bold leading-7 text-neutral-800 md:text-2xl">
@@ -405,7 +417,7 @@ export default function ProductDetailPage() {
                   </p>
                 ) : null}
 
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div id="mua-hang" className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <button
                     type="button"
                     onClick={handleAddToCart}
@@ -443,20 +455,58 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Mô tả */}
+            {/* Mô tả, đánh giá & bình luận */}
             <section className="mt-4 rounded-sm bg-white p-4 shadow-sm">
-              <h2 className="text-base font-bold text-neutral-800">
-                Chi tiết sản phẩm
-              </h2>
-              {product.description ? (
-                <p className="mt-2 whitespace-pre-line text-sm leading-6 text-neutral-600">
-                  {product.description}
-                </p>
-              ) : (
-                <p className="mt-2 text-sm text-neutral-500">
-                  Sản phẩm chưa có mô tả chi tiết.
-                </p>
-              )}
+              <div className="flex flex-wrap gap-1 border-b border-slate-100">
+                {(
+                  [
+                    { id: "description", label: "Mô tả" },
+                    {
+                      id: "reviews",
+                      label: `Đánh giá (${product.reviewCount ?? 0})`,
+                    },
+                    {
+                      id: "comments",
+                      label: `Bình luận (${product.commentCount ?? 0})`,
+                    },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
+                      activeTab === tab.id
+                        ? "border-primary text-primary"
+                        : "border-transparent text-neutral-500 hover:text-neutral-800"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-3">
+                {activeTab === "description" ? (
+                  product.description ? (
+                    <p className="whitespace-pre-line text-sm leading-6 text-neutral-600">
+                      {product.description}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-neutral-500">
+                      Sản phẩm chưa có mô tả chi tiết.
+                    </p>
+                  )
+                ) : null}
+
+                {activeTab === "reviews" ? (
+                  <ReviewSection productId={product.id} />
+                ) : null}
+
+                {activeTab === "comments" ? (
+                  <CommentSection productId={product.id} />
+                ) : null}
+              </div>
             </section>
           </>
         )}
