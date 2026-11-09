@@ -27,6 +27,8 @@ export interface ProductQueryFilter {
   search?: string;
   categoryId?: string;
   status?: "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
+  saleType?: "regular" | "discount" | "flash-sale" | string;
+  sortBy?: "newest" | "price-asc";
 }
 
 export interface CreateCategoryInput {

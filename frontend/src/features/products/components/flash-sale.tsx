@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Zap } from 'lucide-react'
-import { flashSaleProducts, type Product } from '@/src/data-seed/shop-data'
-import { ProductCard } from './product-card'
+import { useEffect, useState } from 'react'
+import { ChevronRight, LoaderCircle, Zap } from 'lucide-react'
+import { ProductApiService } from '../api/product.service'
+import type { Product } from '../types/product.types'
+import { ProductCard, type ProductCardItem } from './product-card'
 
 const INITIAL_SECONDS = 2 * 3600 + 45 * 60 + 30
 
@@ -38,18 +39,64 @@ export function FlashSale({
     onAddToCart,
     onProductClick,
 }: {
-    onAddToCart?: (product: Product) => void
-    onProductClick?: (product: Product) => void
+    onAddToCart?: (product: ProductCardItem) => void
+    onProductClick?: (product: ProductCardItem) => void
 }) {
-    const scroller = useRef<HTMLUListElement>(null)
+    const [products, setProducts] = useState<Product[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [retryKey, setRetryKey] = useState(0)
 
-    const scrollBy = (direction: 1 | -1) => {
-        const el = scroller.current
-        if (!el) return
-        el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: 'smooth' })
+    useEffect(() => {
+        let isCurrent = true
+        setIsLoading(true)
+        setError(null)
+
+        ProductApiService.getProducts({
+            page: 1,
+            limit: 12,
+            status: 'ACTIVE',
+            saleType: 'flash-sale',
+            sortBy: 'newest',
+        })
+            .then((result) => {
+                if (isCurrent) setProducts(result.items)
+            })
+            .catch((loadError: unknown) => {
+                if (isCurrent) {
+                    setError(loadError instanceof Error ? loadError.message : 'Không thể tải sản phẩm Flash Sale')
+                }
+            })
+            .finally(() => {
+                if (isCurrent) setIsLoading(false)
+            })
+
+        return () => {
+            isCurrent = false
+        }
+    }, [retryKey])
+
+    if (isLoading) {
+        return (
+            <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-6 text-sm text-neutral-500">
+                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                Đang tải Flash Sale...
+            </div>
+        )
     }
 
-    if (!flashSaleProducts || flashSaleProducts.length === 0) {
+    if (error) {
+        return (
+            <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-4 text-sm text-red-600">
+                <span>{error}</span>
+                <button type="button" onClick={() => setRetryKey((current) => current + 1)} className="font-medium underline">
+                    Thử lại
+                </button>
+            </div>
+        )
+    }
+
+    if (products.length === 0) {
         return null
     }
 
@@ -60,9 +107,9 @@ export function FlashSale({
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                         <h2
                             id="flash-sale-heading"
-                            className="flex items-center gap-1 text-xl font-black uppercase italic tracking-tight text-sale sm:text-2xl"
+                            className="flex items-center gap-1 text-xl font-black uppercase italic tracking-tight text-primary sm:text-2xl"
                         >
-                            <Zap className="size-6 fill-yellow-400 text-sale" aria-hidden="true" />
+                            <Zap className="size-6 fill-yellow-400 text-primary" aria-hidden="true" />
                             Flash Sale
                         </h2>
                         <CountdownTimer />
@@ -74,32 +121,15 @@ export function FlashSale({
 
                 <div className="relative p-2 sm:p-3">
                     <ul
-                        ref={scroller}
                         className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none]"
                     >
-                        {flashSaleProducts.map((product) => (
+                        {products.map((product) => (
                             <li key={product.id} className="w-40 shrink-0 snap-start sm:w-44 lg:w-48">
                                 <ProductCard product={product} onAddToCart={onAddToCart} onProductClick={onProductClick} />
                             </li>
                         ))}
                     </ul>
 
-                    <button
-                        type="button"
-                        aria-label="Cuộn sang trái"
-                        onClick={() => scrollBy(-1)}
-                        className="absolute left-1 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-neutral-700 shadow-md ring-1 ring-border transition-colors hover:text-primary md:flex"
-                    >
-                        <ChevronLeft className="size-5" />
-                    </button>
-                    <button
-                        type="button"
-                        aria-label="Cuộn sang phải"
-                        onClick={() => scrollBy(1)}
-                        className="absolute right-1 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-neutral-700 shadow-md ring-1 ring-border transition-colors hover:text-primary md:flex"
-                    >
-                        <ChevronRight className="size-5" />
-                    </button>
                 </div>
             </div>
         </section>

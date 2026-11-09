@@ -12,10 +12,10 @@ type PriceProps = {
 }
 
 const currentSize: Record<PriceSize, string> = {
-    sm: 'text-base',
-    md: 'text-xl',
-    lg: 'text-2xl',
-    xl: 'text-3xl',
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-xl',
+    xl: 'text-2xl',
 }
 
 const originalSize: Record<PriceSize, string> = {
@@ -29,8 +29,11 @@ export function Price({ value, originalPrice, size = 'md', showDiscount = false,
     const discount = discountPercent(value, originalPrice)
 
     return (
-        <div className={cn('flex flex-wrap items-baseline gap-x-2 gap-y-0.5', className)}>
-            <p className={cn('price-text leading-none', currentSize[size])}>
+        <div
+            className={cn('flex flex-wrap items-baseline gap-x-2 gap-y-0.5 tabular-nums tracking-tight', className)}
+            style={{ fontFamily: 'Roboto, Arial, sans-serif' }}
+        >
+            <p className={cn('font-semibold leading-none text-primary', currentSize[size])}>
                 <span className="sr-only">{formatPrice(value)} đồng</span>
                 <span aria-hidden="true">
                     {formatPrice(value)}
@@ -39,12 +42,12 @@ export function Price({ value, originalPrice, size = 'md', showDiscount = false,
             </p>
             {originalPrice && originalPrice > value && (
                 <>
-                    <del className={cn('price-original font-normal', originalSize[size])}>
+                    <del className={cn('font-normal text-neutral-400', originalSize[size])}>
                         <span className="sr-only">Giá gốc {formatPrice(originalPrice)} đồng</span>
                         <span aria-hidden="true">{formatPrice(originalPrice)}đ</span>
                     </del>
                     {showDiscount && discount > 0 && (
-                        <span className="rounded-sm bg-price/10 px-1.5 py-0.5 text-[11px] font-normal leading-none text-price">
+                        <span className="rounded-sm bg-orange-50 px-1.5 py-0.5 text-[11px] font-normal leading-none text-primary">
                             -{discount}%
                         </span>
                     )}

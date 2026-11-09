@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ProductHomePage } from '@/src/features/products/components/product-home-page'
 import { useAuth } from '@/src/features/auth/hooks/use-auth'
 import type { Product, User } from '@/src/data-seed/shop-data'
+import type { Product as CatalogProduct } from '@/src/features/products/types/product.types'
 
 export default function Page() {
   const router = useRouter()
@@ -22,7 +23,7 @@ export default function Page() {
     }
   }, [authUser])
 
-  const handleProductClick = (_product: Product) => {
+  const handleProductClick = (_product: Product | CatalogProduct) => {
     // Nếu chưa đăng nhập, chuyển hướng người dùng về trang đăng nhập
     if (!isLoading && !authUser) {
       router.push('/login')
@@ -30,7 +31,7 @@ export default function Page() {
     }
   }
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (_product: Product | CatalogProduct) => {
     if (!isLoading && !authUser) {
       router.push('/login')
       return

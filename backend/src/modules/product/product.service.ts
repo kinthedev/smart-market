@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
+import { Prisma } from "../../../generated/prisma/client.js";
 import type {
   CreateProductInput,
   UpdateProductInput,
@@ -48,6 +49,86 @@ export class ProductService {
     const limit = Math.max(1, Number(filter.limit) || 20);
     const skip = (page - 1) * limit;
 
+    if (
+      filter.saleType === "regular" ||
+      filter.saleType === "discount" ||
+      filter.saleType === "flash-sale"
+    ) {
+      const conditions: Prisma.Sql[] = [];
+      const search = typeof filter.search === "string" ? filter.search.trim() : "";
+
+      if (search) {
+        const searchTerm = search.toLowerCase();
+        conditions.push(
+          Prisma.sql`(POSITION(${searchTerm} IN LOWER("name")) > 0 OR POSITION(${searchTerm} IN LOWER("sku")) > 0)`,
+        );
+      }
+
+      if (typeof filter.categoryId === "string" && filter.categoryId) {
+        conditions.push(Prisma.sql`"categoryId" = ${filter.categoryId}`);
+      }
+
+      if (typeof filter.status === "string" && filter.status) {
+        conditions.push(
+          Prisma.sql`"status" = ${filter.status}::"ProductStatus"`,
+        );
+      }
+
+      if (filter.saleType === "regular") {
+        conditions.push(
+          Prisma.sql`("salePrice" IS NULL OR "salePrice" >= "price")`,
+        );
+      } else if (filter.saleType === "discount") {
+        conditions.push(
+          Prisma.sql`("salePrice" > "price" * 0.5 AND "salePrice" < "price")`,
+        );
+      } else {
+        conditions.push(
+          Prisma.sql`("salePrice" >= "price" * 0.1 AND "salePrice" <= "price" * 0.5)`,
+        );
+      }
+
+      const whereClause = Prisma.join(conditions, " AND ");
+      const orderBy =
+        filter.sortBy === "price-asc"
+          ? Prisma.sql`COALESCE("salePrice", "price") ASC, "createdAt" DESC`
+          : Prisma.sql`"createdAt" DESC`;
+
+      const [countRows, orderedIds] = await Promise.all([
+        prisma.$queryRaw<Array<{ total: bigint }>>(
+          Prisma.sql`SELECT COUNT(*) AS "total" FROM "product" WHERE ${whereClause}`,
+        ),
+        prisma.$queryRaw<Array<{ id: string }>>(
+          Prisma.sql`SELECT "id" FROM "product" WHERE ${whereClause} ORDER BY ${orderBy} LIMIT ${limit} OFFSET ${skip}`,
+        ),
+      ]);
+      const ids = orderedIds.map(({ id }) => id);
+      const items = ids.length
+        ? await prisma.product.findMany({
+            where: { id: { in: ids } },
+            include: {
+              category: true,
+              images: { orderBy: { order: "asc" } },
+              variants: true,
+            },
+          })
+        : [];
+      const itemsById = new Map(items.map((item) => [item.id, item]));
+
+      return {
+        items: ids.flatMap((id) => {
+          const item = itemsById.get(id);
+          return item ? [item] : [];
+        }),
+        pagination: {
+          page,
+          limit,
+          total: Number(countRows[0]?.total ?? 0n),
+          totalPages: Math.ceil(Number(countRows[0]?.total ?? 0n) / limit),
+        },
+      };
+    }
+
     const where: any = {};
 
     if (filter.search) {
@@ -65,13 +146,21 @@ export class ProductService {
       where.status = filter.status;
     }
 
+    const orderBy =
+      filter.sortBy === "price-asc"
+        ? [
+            { salePrice: { sort: "asc" as const, nulls: "last" as const } },
+            { price: "asc" as const },
+          ]
+        : { createdAt: "desc" as const };
+
     const [total, items] = await Promise.all([
       prisma.product.count({ where }),
       prisma.product.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         include: {
           category: true,
           images: {

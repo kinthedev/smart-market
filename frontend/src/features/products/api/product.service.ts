@@ -42,6 +42,8 @@ export class ProductApiService {
     search?: string;
     categoryId?: string;
     status?: string;
+    saleType?: "regular" | "discount" | "flash-sale";
+    sortBy?: "newest" | "price-asc";
   }): Promise<ProductListResponse> {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
@@ -49,19 +51,18 @@ export class ProductApiService {
     if (params?.search) query.set("search", params.search);
     if (params?.categoryId) query.set("categoryId", params.categoryId);
     if (params?.status) query.set("status", params.status);
+    if (params?.saleType) query.set("saleType", params.saleType);
+    if (params?.sortBy) query.set("sortBy", params.sortBy);
 
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/products?${query.toString()}`, {
-        cache: "no-store",
-        credentials: "include",
-      });
-      const data = await res.json();
-      return data.success
-        ? data.data
-        : { items: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
-    } catch {
-      return { items: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+    const res = await fetch(`${BACKEND_URL}/api/v1/products?${query.toString()}`, {
+      cache: "no-store",
+      credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Không thể tải danh sách sản phẩm");
     }
+    return data.data;
   }
 
   static async getProductById(id: string): Promise<Product | null> {

@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { products as allProducts, type Product, type User } from '@/src/data-seed/shop-data'
+import { useState } from 'react'
+import type { Product as CatalogProduct } from '../types/product.types'
+import type { Product, User } from '@/src/data-seed/shop-data'
 import { CategoryGrid } from './category-grid'
 import { FlashSale } from './flash-sale'
 import { HeroSection } from './hero-section'
@@ -13,8 +14,8 @@ export type ProductHomePageProps = {
     user?: User | null
     cartCount?: number
     onLogout?: () => void
-    onAddToCart?: (product: Product) => void
-    onProductClick?: (product: Product) => void
+    onAddToCart?: (product: Product | CatalogProduct) => void
+    onProductClick?: (product: Product | CatalogProduct) => void
     onSearch?: (query: string) => void
 }
 
@@ -49,11 +50,6 @@ export function ProductHomePage({
         document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
 
-    const filtered = useMemo(() => {
-        const q = normalize(query)
-        return q ? allProducts.filter((p) => normalize(p.name).includes(q)) : allProducts
-    }, [query])
-
     return (
         <div className="min-h-screen bg-background text-foreground">
             <SiteHeader user={user} cartCount={cartCount} onLogout={onLogout} onSearch={handleSearch} />
@@ -61,7 +57,7 @@ export function ProductHomePage({
                 <HeroSection />
                 <CategoryGrid />
                 <FlashSale onAddToCart={onAddToCart} onProductClick={onProductClick} />
-                <ProductGrid products={filtered} query={query} onAddToCart={onAddToCart} onProductClick={onProductClick} />
+                <ProductGrid query={query} onAddToCart={onAddToCart} onProductClick={onProductClick} />
             </main>
             <SiteFooter />
         </div>
