@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { upload } from '../../middlewares/upload';
-import { uploadImage } from './upload.controller';
-import { authenticate } from '../../middlewares/authenticate';
+import { upload } from '../../middlewares/upload.js';
+import { uploadImage } from './upload.controller.js';
+import { authenticate } from '../../middlewares/authenticate.js';
 
 const router = Router();
 
