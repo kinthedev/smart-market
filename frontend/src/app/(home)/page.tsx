@@ -1,16 +1,18 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProductHomePage } from '@/src/features/products/components/product-home-page'
 import { useAuth } from '@/src/features/auth/hooks/use-auth'
+import { useCart } from '@/src/features/cart/hooks/use-cart'
+import { buildCartItem } from '@/src/features/cart/utils/cart-item'
 import type { Product, User } from '@/src/data-seed/shop-data'
 import type { Product as CatalogProduct } from '@/src/features/products/types/product.types'
 
 export default function Page() {
   const router = useRouter()
   const { user: authUser, logout, isLoading } = useAuth()
-  const [cartCount, setCartCount] = useState(0)
+  const { addItem } = useCart()
 
   // Chuyển đổi dữ liệu user từ Better Auth sang format User cho header
   const currentUser: User | null = useMemo(() => {
@@ -23,29 +25,19 @@ export default function Page() {
     }
   }, [authUser])
 
-  const handleProductClick = (_product: Product | CatalogProduct) => {
-    // Nếu chưa đăng nhập, chuyển hướng người dùng về trang đăng nhập
+  const handleAddToCart = (product: Product | CatalogProduct) => {
     if (!isLoading && !authUser) {
       router.push('/login')
       return
     }
-  }
-
-  const handleAddToCart = (_product: Product | CatalogProduct) => {
-    if (!isLoading && !authUser) {
-      router.push('/login')
-      return
-    }
-    setCartCount((count) => count + 1)
+    addItem(buildCartItem(product))
   }
 
   return (
     <ProductHomePage
       user={currentUser}
-      cartCount={cartCount}
       onLogout={() => logout()}
       onAddToCart={handleAddToCart}
-      onProductClick={handleProductClick}
     />
   )
 }

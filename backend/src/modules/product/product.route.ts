@@ -5,6 +5,7 @@ import { authenticate } from "../../middlewares/authenticate.js";
 const router = Router();
 
 // Public routes (khách xem sản phẩm & danh mục)
+router.get("/categories/:slug", ProductController.getCategoryBySlug);
 router.get("/categories", ProductController.getCategories);
 router.get("/products", ProductController.getProducts);
 router.get("/products/:id", ProductController.getProductById);

@@ -163,7 +163,6 @@ export function AccountManagementView() {
               }
             : null
         }
-        cartCount={0}
         onLogout={() => {
           if (hasUnsavedChanges) {
             if (confirm("Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn đăng xuất?")) {

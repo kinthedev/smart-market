@@ -64,6 +64,31 @@ export function ProductForm({
     )
 
     const [errorMsg, setErrorMsg] = React.useState("")
+    const [isUploading, setIsUploading] = React.useState<number | null>(null) // Đánh dấu đang upload ảnh nào
+
+    const handleFileUpload = async (index: number, file: File) => {
+        setIsUploading(index)
+        const formData = new FormData()
+        formData.append("image", file)
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/v1/upload`, {
+                method: "POST",
+                body: formData,
+                credentials: "include", // Quan trọng để gửi kèm Session Cookie
+            })
+
+            if (!response.ok) throw new Error("Upload ảnh thất bại")
+            
+            const data = await response.json()
+            handleImageChange(index, "url", data.url)
+        } catch (err) {
+            console.error(err)
+            alert("Lỗi khi tải ảnh lên server!")
+        } finally {
+            setIsUploading(null)
+        }
+    }
 
     const handleAddImage = () => {
         setImages([...images, { url: "", altText: "" }])
@@ -285,7 +310,7 @@ export function ProductForm({
                                 id="product-price"
                                 type="number"
                                 min={0}
-                                step={1000}
+                                step="any"
                                 value={price || ""}
                                 onChange={(e) => setPrice(Number(e.target.value))}
                                 placeholder="250000"
@@ -301,7 +326,7 @@ export function ProductForm({
                                 id="product-sale-price"
                                 type="number"
                                 min={0}
-                                step={1000}
+                                step="any"
                                 value={salePrice}
                                 onChange={(e) =>
                                     setSalePrice(e.target.value === "" ? "" : Number(e.target.value))
@@ -380,11 +405,16 @@ export function ProductForm({
                                         )}
                                     </div>
                                     <Input
-                                        value={img.url}
-                                        onChange={(e) => handleImageChange(idx, "url", e.target.value)}
-                                        placeholder={`URL hình ảnh ${idx === 0 ? "(Ảnh đại diện)" : `#${idx + 1}`}`}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) handleFileUpload(idx, file)
+                                        }}
+                                        disabled={isUploading === idx}
                                         className="flex-1"
                                     />
+                                    {isUploading === idx && <Loader2 className="mr-2 size-4 animate-spin" />}
                                     {images.length > 1 && (
                                         <Button
                                             type="button"

@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import {
     Baby,
     BookOpen,
@@ -32,6 +33,8 @@ import {
 } from 'lucide-react'
 import { cn } from 'cn'
 import { categories, type CategoryIcon } from '@/src/data-seed/shop-data'
+import { ProductApiService } from '../api/product.service'
+import type { Category } from '../types/product.types'
 
 const icons: Record<CategoryIcon, LucideIcon> = {
     shirt: Shirt,
@@ -62,7 +65,6 @@ const icons: Record<CategoryIcon, LucideIcon> = {
     ticket: Ticket,
 }
 
-// Icon gradient background mềm mại, cao cấp
 const iconGradients: Record<CategoryIcon, string> = {
     shirt: 'from-blue-500/15 to-blue-500/5 text-blue-600 border-blue-200/60',
     dress: 'from-rose-500/15 to-rose-500/5 text-rose-600 border-rose-200/60',
@@ -96,6 +98,43 @@ export function CategoryGrid() {
     const scrollerRef = React.useRef<HTMLDivElement>(null)
     const [canScrollLeft, setCanScrollLeft] = React.useState(false)
     const [canScrollRight, setCanScrollRight] = React.useState(true)
+    const [dbCategories, setDbCategories] = React.useState<Category[] | null>(null)
+
+    // Tải danh mục thật từ database
+    React.useEffect(() => {
+        let mounted = true
+        ProductApiService.getCategories()
+            .then((data) => {
+                if (mounted) setDbCategories(data)
+            })
+            .catch(() => {
+                if (mounted) setDbCategories([])
+            })
+        return () => {
+            mounted = false
+        }
+    }, [])
+
+    // Nếu DB có danh mục thì hiển thị danh mục thật, ngược lại giữ bộ icon mẫu
+    const displayCategories: Array<{ key: string; name: string; slug: string; icon: CategoryIcon }> =
+        dbCategories && dbCategories.length > 0
+            ? dbCategories.map((c) => {
+                  const matched = categories.find(
+                      (m) => m.name.trim().toLowerCase() === c.name.trim().toLowerCase()
+                  )
+                  return {
+                      key: c.id,
+                      name: c.name,
+                      slug: c.slug,
+                      icon: matched?.icon ?? 'sparkles',
+                  }
+              })
+            : categories.map((c) => ({
+                  key: c.id,
+                  name: c.name,
+                  slug: c.id,
+                  icon: c.icon,
+              }))
 
     const checkScroll = React.useCallback(() => {
         const el = scrollerRef.current
@@ -136,19 +175,18 @@ export function CategoryGrid() {
                 </div>
 
                 <div className="relative">
-                    {/* Danh sách cuộn ngang đúng 2 hàng với snap để căn chỉnh từng cột vừa khít */}
                     <div
                         ref={scrollerRef}
                         className="grid grid-flow-col grid-rows-2 auto-cols-[calc((100%-32px)/4)] gap-x-2.5 gap-y-2 overflow-x-auto scroll-smooth py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[calc((100%-48px)/6)] md:auto-cols-[calc((100%-64px)/8)] lg:auto-cols-[calc((100%-72px)/10)]"
                     >
-                        {categories.map((category) => {
+                        {displayCategories.map((category) => {
                             const Icon = icons[category.icon] || Sparkles
                             const gradientClass = iconGradients[category.icon] || 'from-slate-500/15 to-slate-500/5 text-slate-600 border-slate-200/60'
 
                             return (
-                                <a
-                                    key={category.id}
-                                    href={`#category-${category.id}`}
+                                <Link
+                                    key={category.key}
+                                    href={`/category/${encodeURIComponent(category.slug)}`}
                                     className="group flex flex-col items-center justify-start gap-1.5 rounded-lg p-1.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50/80"
                                 >
                                     <div
@@ -162,12 +200,11 @@ export function CategoryGrid() {
                                     <span className="line-clamp-2 w-full text-center text-[11px] font-medium leading-tight text-neutral-700 transition-colors group-hover:text-primary sm:text-xs">
                                         {category.name}
                                     </span>
-                                </a>
+                                </Link>
                             )
                         })}
                     </div>
 
-                    {/* Mũi tên điều hướng bên trái */}
                     {canScrollLeft && (
                         <button
                             type="button"
@@ -179,7 +216,6 @@ export function CategoryGrid() {
                         </button>
                     )}
 
-                    {/* Mũi tên điều hướng bên phải */}
                     {canScrollRight && (
                         <button
                             type="button"

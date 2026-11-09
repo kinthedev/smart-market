@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { CircleHelp, LayoutDashboard, Link2, LogOut, Search, ShoppingBag, ShoppingCart, Smartphone } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { hotKeywords, type User } from '@/src/data-seed/shop-data'
+import { useCart } from '@/src/features/cart/hooks/use-cart'
 
 type SiteHeaderProps = {
     user?: User | null
-    cartCount: number
     onLogout?: () => void
     onSearch?: (query: string) => void
 }
@@ -19,10 +20,24 @@ const topLinks = [
     { label: 'Hỗ trợ', icon: CircleHelp, className: '' },
 ]
 
-export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderProps) {
+export function SiteHeader({ user, onLogout, onSearch }: SiteHeaderProps) {
     const [query, setQuery] = useState('')
+    const router = useRouter()
+    const { totalQuantity } = useCart()
 
-    const submit = (value: string) => onSearch?.(value.trim())
+    const submit = (value: string) => {
+        const keyword = value.trim()
+        if (!keyword) return
+
+        // Nếu trang hiện tại tự xử lý tìm kiếm (vd: trang chủ) thì dùng callback,
+        // ngược lại điều hướng sang trang kết quả tìm kiếm chung.
+        if (onSearch) {
+            onSearch(keyword)
+            return
+        }
+
+        router.push(`/search?q=${encodeURIComponent(keyword)}`)
+    }
 
     return (
         <header className="bg-gradient-to-b from-primary to-orange-500 text-white">
@@ -144,18 +159,18 @@ export function SiteHeader({ user, cartCount, onLogout, onSearch }: SiteHeaderPr
                     </ul>
                 </div>
 
-                <button
-                    type="button"
-                    aria-label={`Giỏ hàng, ${cartCount} sản phẩm`}
+                <Link
+                    href="/cart"
+                    aria-label={`Giỏ hàng, ${totalQuantity} sản phẩm`}
                     className="relative order-2 ml-auto flex size-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/15 md:order-3 md:ml-0"
                 >
                     <ShoppingCart className="size-7" aria-hidden="true" />
-                    {cartCount > 0 && (
+                    {totalQuantity > 0 && (
                         <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-sale px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white">
-                            {cartCount > 99 ? '99+' : cartCount}
+                            {totalQuantity > 99 ? '99+' : totalQuantity}
                         </span>
                     )}
-                </button>
+                </Link>
             </div>
         </header>
     )

@@ -22,6 +22,19 @@ export class ProductApiService {
     }
   }
 
+  static async getCategoryBySlug(slug: string): Promise<Category | null> {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/categories/${encodeURIComponent(slug)}`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      const data = await res.json();
+      return data.success ? data.data : null;
+    } catch {
+      return null;
+    }
+  }
+
   static async createCategory(data: { name: string; description?: string }): Promise<Category> {
     const res = await fetch(`${BACKEND_URL}/api/v1/categories`, {
       method: "POST",

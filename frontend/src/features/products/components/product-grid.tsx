@@ -2,28 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { LoaderCircle, SearchX } from 'lucide-react'
-import { cn } from 'cn'
 import { ProductApiService } from '../api/product.service'
 import type { Product as CatalogProduct } from '../types/product.types'
 import { ProductCard } from './product-card'
-
-const tabs = [
-    { id: 'newest', label: 'Gợi Ý Hôm Nay' },
-    { id: 'on-sale', label: 'Đang Giảm Giá' },
-] as const
-
-type TabId = (typeof tabs)[number]['id']
 
 const PAGE_SIZE = 12
 
 type ProductGridProps = {
     query?: string
+    categoryId?: string
+    title?: string
     onAddToCart?: (product: CatalogProduct) => void
     onProductClick?: (product: CatalogProduct) => void
 }
 
-export function ProductGrid({ query, onAddToCart, onProductClick }: ProductGridProps) {
-    const [activeTab, setActiveTab] = useState<TabId>('newest')
+export function ProductGrid({ query, categoryId, title, onAddToCart, onProductClick }: ProductGridProps) {
     const [products, setProducts] = useState<CatalogProduct[]>([])
     const [total, setTotal] = useState(0)
     const [page, setPage] = useState(1)
@@ -46,8 +39,8 @@ export function ProductGrid({ query, onAddToCart, onProductClick }: ProductGridP
             page: 1,
             limit: PAGE_SIZE,
             search: query?.trim() || undefined,
+            categoryId: categoryId || undefined,
             status: 'ACTIVE',
-            saleType: activeTab === 'on-sale' ? 'discount' : 'regular',
             sortBy: 'newest',
         })
             .then((result) => {
@@ -66,7 +59,7 @@ export function ProductGrid({ query, onAddToCart, onProductClick }: ProductGridP
         return () => {
             if (requestId.current === currentRequestId) requestId.current += 1
         }
-    }, [activeTab, query, retryKey])
+    }, [query, categoryId, retryKey])
 
     const loadMore = async () => {
         const currentRequestId = requestId.current
@@ -78,8 +71,8 @@ export function ProductGrid({ query, onAddToCart, onProductClick }: ProductGridP
                 page: nextPage,
                 limit: PAGE_SIZE,
                 search: query?.trim() || undefined,
+                categoryId: categoryId || undefined,
                 status: 'ACTIVE',
-                saleType: activeTab === 'on-sale' ? 'discount' : 'regular',
                 sortBy: 'newest',
             })
             if (requestId.current !== currentRequestId) return
@@ -98,35 +91,9 @@ export function ProductGrid({ query, onAddToCart, onProductClick }: ProductGridP
     return (
         <section id="products" aria-labelledby="products-heading" className="mx-auto max-w-7xl scroll-mt-2 px-4 pt-2">
             <div className="sticky top-0 z-20 -mx-4 mb-3 bg-background px-4 pb-1 pt-1 sm:static sm:mx-0 sm:p-0">
-                <h2 id="products-heading" className="sr-only">
-                    Gợi ý hôm nay
+                <h2 id="products-heading" className="text-lg font-bold text-neutral-800">
+                    {title ?? 'Gợi ý hôm nay'}
                 </h2>
-                <div
-                    role="tablist"
-                    aria-label="Sắp xếp sản phẩm"
-                    className="flex overflow-x-auto bg-white shadow-sm [scrollbar-width:none]"
-                >
-                    {tabs.map((tab) => {
-                        const active = tab.id === activeTab
-                        return (
-                            <button
-                                key={tab.id}
-                                role="tab"
-                                type="button"
-                                aria-selected={active}
-                                onClick={() => {
-                                    if (tab.id !== activeTab) setActiveTab(tab.id)
-                                }}
-                                className={cn(
-                                    'relative flex-1 whitespace-nowrap border-b-4 border-transparent px-3 py-2.5 text-sm font-bold uppercase transition-colors sm:text-[15px]',
-                                    active ? 'border-primary text-primary' : 'text-neutral-600 hover:text-primary'
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        )
-                    })}
-                </div>
             </div>
 
             {query ? (

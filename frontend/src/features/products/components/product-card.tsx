@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Flame, Heart, ShieldCheck, ShoppingCart, Star, Zap } from 'lucide-react'
 import { cn } from 'cn'
 import { Price } from '@/src//features/products/components/price'
@@ -34,6 +37,7 @@ function SoldBar({ sold, stock }: { sold: number; stock: number }) {
 }
 
 export function ProductCard({ product, onAddToCart, onProductClick }: ProductCardProps) {
+    const router = useRouter()
     const flash = 'stock' in product ? product : null
     const catalogProduct = 'images' in product
     const image = catalogProduct ? product.images[0]?.url : product.image
@@ -55,6 +59,11 @@ export function ProductCard({ product, onAddToCart, onProductClick }: ProductCar
 
     const handleClick = () => {
         onProductClick?.(product)
+
+        // Sản phẩm thật trong database -> mở trang chi tiết
+        if ('images' in product) {
+            router.push(`/product/${product.id}`)
+        }
     }
 
     return (
@@ -83,7 +92,7 @@ export function ProductCard({ product, onAddToCart, onProductClick }: ProductCar
                     }}
                     className="absolute inset-x-2 bottom-2 flex h-8 translate-y-2 items-center justify-center gap-1 rounded-sm bg-primary/95 text-xs font-bold text-white opacity-0 shadow transition-all duration-200 hover:bg-primary group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
                 >
-                    <ShoppingCart className="size-3.5" aria-hidden="true" /> Tìm đồ tương tự
+                    <ShoppingCart className="size-3.5" aria-hidden="true" /> Thêm vào giỏ
                 </button>
             </div>
 

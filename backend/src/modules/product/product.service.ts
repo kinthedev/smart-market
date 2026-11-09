@@ -21,6 +21,34 @@ function slugify(text: string): string {
 
 export class ProductService {
   // --- CATEGORIES ---
+  static async getCategoryBySlug(slug: string) {
+    // 1. Tìm chính xác theo slug
+    let category = await prisma.category.findUnique({ where: { slug } });
+    if (category) return category;
+
+    // 2. Thử tìm theo id (phòng trường hợp URL chứa id)
+    category = await prisma.category.findUnique({ where: { id: slug } });
+    if (category) return category;
+
+    // 3. Thử tìm tương đối theo tên đã chuẩn hoá (bỏ dấu, thay khoảng trắng bằng '-')
+    const normalize = (text: string) =>
+      text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[đĐ]/g, "d")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-");
+
+    const all = await prisma.category.findMany();
+    return (
+      all.find((c) => normalize(c.name) === slug) ||
+      all.find((c) => c.slug.startsWith(`${slug}-`)) ||
+      null
+    );
+  }
+
   static async getCategories() {
     return prisma.category.findMany({
       orderBy: { name: "asc" },
