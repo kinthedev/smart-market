@@ -6,28 +6,29 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String     @unique
+  emailVerified Boolean    @default(false)
   image         String?
-  phone         String?
-  status        String    @default("Hoạt động") // "Hoạt động" | "Bị khóa"
-  gender        String?
-  dateOfBirth   String?
-  province      String?
-  district      String?
-  ward          String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   addressDetail String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
+  dateOfBirth   String?
+  district      String?
+  gender        String?
+  phone         String?
+  province      String?
+  status        String     @default("Hoạt động")
+  ward          String?
   accounts      Account[]
-  orders        Order[]
-  wishlists     Wishlist[]
-  reviews       Review[]
   comments      Comment[]
+  orders        Order[]
+  reviews       Review[]
+  sessions      Session[]
+  wishlists     Wishlist[]
 
   @@map("user")
 }
@@ -43,8 +44,8 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("session")
   @@index([userId])
+  @@map("session")
 }
 
 model Account {
@@ -52,7 +53,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -62,9 +62,10 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("account")
   @@index([userId])
+  @@map("account")
 }
 
 model Verification {
@@ -75,14 +76,8 @@ model Verification {
   createdAt  DateTime?
   updatedAt  DateTime?
 
-  @@map("verification")
   @@index([identifier])
-}
-
-enum ProductStatus {
-  ACTIVE
-  INACTIVE
-  OUT_OF_STOCK
+  @@map("verification")
 }
 
 model Category {
@@ -98,24 +93,24 @@ model Category {
 }
 
 model Product {
-  id            String          @id @default(cuid())
-  sku           String          @unique
-  name          String
-  slug          String          @unique
-  description   String?
-  price         Float
-  salePrice     Float?
-  categoryId    String?
-  category      Category?       @relation(fields: [categoryId], references: [id])
-  status        ProductStatus   @default(ACTIVE)
-  images        ProductImage[]
-  variants      ProductVariant[]
-  wishlists     Wishlist[]
-  reviews       Review[]
-  comments      Comment[]
-  orderItems    OrderItem[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id          String           @id @default(cuid())
+  sku         String           @unique
+  name        String
+  slug        String           @unique
+  description String?
+  price       Float
+  salePrice   Float?
+  categoryId  String?
+  status      ProductStatus    @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  comments    Comment[]
+  orderItems  OrderItem[]
+  category    Category?        @relation(fields: [categoryId], references: [id])
+  images      ProductImage[]
+  variants    ProductVariant[]
+  reviews     Review[]
+  wishlists   Wishlist[]
 
   @@map("product")
 }
@@ -128,8 +123,8 @@ model ProductImage {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@map("product_image")
   @@index([productId])
+  @@map("product_image")
 }
 
 model ProductVariant {
@@ -140,66 +135,58 @@ model ProductVariant {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@map("product_variant")
   @@index([productId])
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  SHIPPING
-  DELIVERED
-  CANCELLED
+  @@map("product_variant")
 }
 
 model Order {
   id            String      @id @default(cuid())
   code          String      @unique
   userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   status        OrderStatus @default(CONFIRMED)
   total         Float
   receiverName  String
   receiverPhone String
   address       String
   note          String?
-  items         OrderItem[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         OrderItem[]
 
-  @@map("order")
   @@index([userId, createdAt])
+  @@map("order")
 }
 
 model OrderItem {
   id        String  @id @default(cuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
   name      String
   image     String?
   price     Float
   size      String?
   color     String?
   quantity  Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
 
-  @@map("order_item")
   @@index([orderId])
   @@index([productId])
+  @@map("order_item")
 }
 
 model Wishlist {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
-  @@map("wishlist")
   @@index([userId])
+  @@map("wishlist")
 }
 
 model Review {
@@ -209,15 +196,15 @@ model Review {
   verifiedPurchase Boolean  @default(true)
   isHidden         Boolean  @default(false)
   userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId        String
-  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
-  @@map("review")
   @@index([productId])
+  @@map("review")
 }
 
 model Comment {
@@ -225,12 +212,26 @@ model Comment {
   content   String
   isHidden  Boolean  @default(false)
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("comment")
   @@index([productId, createdAt])
+  @@map("comment")
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPING
+  DELIVERED
+  CANCELLED
 }
