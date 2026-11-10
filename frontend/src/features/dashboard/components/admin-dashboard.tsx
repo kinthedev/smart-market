@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
     Bell, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ClipboardList,
@@ -13,13 +13,13 @@ import { useAuth } from '@/src/features/auth/hooks/use-auth'
 import { ProductManager } from '@/src/features/products/components/product-manager'
 import { CustomerManager } from '@/src/features/customers/components/customer-manager'
 import { ReviewManager } from '@/src/features/reviews/components/review-manager'
+import { AdminOrderManager } from '@/src/features/orders/components/admin-order-manager'
+import { InventoryManager } from '@/src/features/inventory/components/inventory-manager'
 
 type Trang = 'Tổng quan' | 'Đơn hàng' | 'Sản phẩm' | 'Khách hàng' | 'Kho hàng' | 'Đánh giá'
 
-type DonHang = { ma: string; khach: string; ngay: string; tong: string; phuongThuc: string; trangThai: string }
 type SanPham = { ten: string; ma: string; daBan: number; doanhThu: string; mau: string; anh: string }
 
-const donHangBanDau: DonHang[] = []
 const sanPhamBanDau: SanPham[] = []
 
 const menuNhom = [
@@ -76,7 +76,6 @@ export function AdminDashboard() {
     const [thuGon, setThuGon] = useState(false)
     const [timKiem, setTimKiem] = useState('')
     const [boLoc, setBoLoc] = useState('30 ngày qua')
-    const [donHang, setDonHang] = useState<DonHang[]>(donHangBanDau)
     const [sanPhamList, setSanPhamList] = useState<SanPham[]>(sanPhamBanDau)
     const [thongBao, setThongBao] = useState('')
     const [moTaiKhoanMenu, setMoTaiKhoanMenu] = useState(false)
@@ -91,9 +90,7 @@ export function AdminDashboard() {
         .join('')
         .toUpperCase() || 'AD'
 
-    const donHangLoc = useMemo(() => donHang.filter((d) => `${d.ma} ${d.khach} ${d.trangThai}`.toLowerCase().includes(timKiem.toLowerCase())), [donHang, timKiem])
     const hienThongBao = (noiDung: string) => { setThongBao(noiDung); window.setTimeout(() => setThongBao(''), 2600) }
-    const xacNhanDon = (ma: string) => { setDonHang(donHang.map((d) => d.ma === ma ? { ...d, trangThai: 'Đã xác nhận' } : d)); hienThongBao(`Đã xác nhận đơn ${ma}`) }
 
     return <div className="admin-shell">
         {moMenu && <button className="lop-phu" aria-label="Đóng menu" onClick={() => setMoMenu(false)} />}
@@ -316,7 +313,7 @@ export function AdminDashboard() {
                 )}
 
                 {trang === 'Đơn hàng' && (
-                    <QuanLyDonHang donHang={donHangLoc} timKiem={timKiem} onConfirm={xacNhanDon} onNotice={hienThongBao} />
+                    <AdminOrderManager onNotice={hienThongBao} />
                 )}
 
                 {trang === 'Sản phẩm' && (
@@ -332,12 +329,7 @@ export function AdminDashboard() {
                 )}
 
                 {trang === 'Kho hàng' && (
-                    <TrangPlaceholder
-                        tieuDe="Quản lý kho hàng"
-                        moTa="Theo dõi tồn kho và cảnh báo sản phẩm sắp hết hàng."
-                        icon={<Warehouse />}
-                        onNotice={hienThongBao}
-                    />
+                    <InventoryManager onNotice={hienThongBao} />
                 )}
             </main>
         </section>
@@ -389,101 +381,6 @@ function BieuDoDonHang() {
                 <p style={{ fontSize: '13px', margin: 0, color: '#64748b' }}>Chưa có đơn hàng nào</p>
             </div>
         </section>
-    )
-}
-
-function QuanLyDonHang({
-    donHang,
-    timKiem,
-    onConfirm,
-    onNotice,
-}: {
-    donHang: DonHang[]
-    timKiem: string
-    onConfirm: (ma: string) => void
-    onNotice: (text: string) => void
-}) {
-    return (
-        <>
-            <div className="tieu-de-trang">
-                <div>
-                    <p className="loi-chao">Quản lý bán hàng</p>
-                    <h1>Đơn hàng</h1>
-                    <p className="mo-ta">Theo dõi và xử lý tất cả đơn hàng của cửa hàng.</p>
-                </div>
-                <button className="nut-chinh" onClick={() => onNotice('Đã mở biểu mẫu tạo đơn hàng')}>
-                    <Plus size={17} /> Tạo đơn hàng
-                </button>
-            </div>
-
-            <div className="thanh-cong-cu">
-                <div className="o-tim-kiem">
-                    <Search size={17} />
-                    <input value={timKiem} readOnly placeholder="Tìm theo mã đơn, tên khách hàng..." />
-                </div>
-                <select>
-                    <option>Tất cả trạng thái</option>
-                    <option>Chờ xác nhận</option>
-                    <option>Đã xác nhận</option>
-                    <option>Đang giao hàng</option>
-                </select>
-                <button className="nut-loc">
-                    <SlidersHorizontal size={16} /> Bộ lọc
-                </button>
-            </div>
-
-            <section className="the-noi-dung bang-du-lieu">
-                <div className="tieu-de-bang">
-                    <div>
-                        <h2>Tất cả đơn hàng <span>0</span></h2>
-                    </div>
-                    <button className="nut-xuat" onClick={() => onNotice('Không có dữ liệu để xuất')}>
-                        <FileText size={16} /> Xuất dữ liệu
-                    </button>
-                </div>
-
-                {donHang.length === 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 16px', color: '#94a3b8', textAlign: 'center' }}>
-                        <Inbox size={44} strokeWidth={1.5} style={{ marginBottom: '10px' }} />
-                        <strong style={{ color: '#334155', fontSize: '15px' }}>Chưa có đơn hàng nào</strong>
-                        <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0' }}>Đơn hàng mới từ khách hàng sẽ xuất hiện tại đây.</p>
-                    </div>
-                ) : (
-                    <div className="bang-cuon">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Mã đơn hàng</th>
-                                    <th>Khách hàng</th>
-                                    <th>Ngày đặt</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Thanh toán</th>
-                                    <th>Trạng thái</th>
-                                    <th />
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {donHang.map((d) => (
-                                    <tr key={d.ma}>
-                                        <td><strong>{d.ma}</strong></td>
-                                        <td>{d.khach}</td>
-                                        <td>{d.ngay}</td>
-                                        <td><strong>{d.tong}</strong></td>
-                                        <td>{d.phuongThuc}</td>
-                                        <td><span className="trang-thai cho-xu-ly"><span className="dau-tron" />{d.trangThai}</span></td>
-                                        <td>
-                                            <button className="nut-xem" onClick={() => d.trangThai === 'Chờ xác nhận' ? onConfirm(d.ma) : onNotice(`Đang xem chi tiết ${d.ma}`)}>
-                                                {d.trangThai === 'Chờ xác nhận' ? 'Xác nhận' : 'Xem'}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </section>
-        </>
     )
 }
 
@@ -575,37 +472,3 @@ function QuanLySanPham({
     )
 }
 
-function TrangPlaceholder({
-    tieuDe,
-    moTa,
-    icon,
-    onNotice,
-}: {
-    tieuDe: string
-    moTa: string
-    icon: React.ReactNode
-    onNotice: (text: string) => void
-}) {
-    return (
-        <>
-            <div className="tieu-de-trang">
-                <div>
-                    <p className="loi-chao">Quản lý bán hàng</p>
-                    <h1>{tieuDe}</h1>
-                    <p className="mo-ta">{moTa}</p>
-                </div>
-                <button className="nut-chinh" onClick={() => onNotice('Đã mở biểu mẫu thêm mới')}>
-                    <Plus size={17} /> Thêm mới
-                </button>
-            </div>
-            <section className="trang-rong the-noi-dung">
-                <div className="icon-trang-rong">{icon}</div>
-                <h2>Không gian quản lý {tieuDe.toLowerCase()}</h2>
-                <p>Dữ liệu thực tế sẽ được hiển thị tại đây khi hệ thống phát sinh dữ liệu.</p>
-                <button className="nut-chinh" onClick={() => onNotice('Đã mở biểu mẫu thêm mới')}>
-                    <Plus size={17} /> Thêm mới
-                </button>
-            </section>
-        </>
-    )
-}

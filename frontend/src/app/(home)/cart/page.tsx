@@ -217,12 +217,6 @@ export default function CartPage() {
               >
                 Tiến hành thanh toán
               </button>
-              <Link
-                href="/"
-                className="mt-2 flex h-10 w-full items-center justify-center rounded-sm border border-slate-200 text-sm font-medium text-neutral-700 hover:border-primary hover:text-primary"
-              >
-                Tiếp tục mua sắm
-              </Link>
             </aside>
           </div>
         )}

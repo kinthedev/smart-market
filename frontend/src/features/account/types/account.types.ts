@@ -7,11 +7,25 @@ export interface UserProfile {
   gender: "Nam" | "Nữ" | "Khác"
 }
 
-export interface UserAddress {
+/** Dữ liệu nhập của một địa chỉ / thông tin người nhận. */
+export interface AddressFormValue {
+  receiverName: string
+  receiverPhone: string
   provinceId: string
   districtId: string
   ward: string
-  specificAddress: string
+  addressDetail: string
+}
+
+/** Thông tin người nhận đã lưu trong cơ sở dữ liệu. */
+export interface ReceiverAddress extends AddressFormValue {
+  id: string
+  userId: string
+  province: string
+  district: string
+  isDefault: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface AccountSecurity {
@@ -21,6 +35,5 @@ export interface AccountSecurity {
 
 export interface AccountData {
   profile: UserProfile
-  address: UserAddress
   security: AccountSecurity
 }

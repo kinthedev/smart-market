@@ -22,6 +22,8 @@ import { OrderApiService } from "../api/order.service"
 import { OrderSuccessView } from "./order-success-view"
 import type { Order, PaymentMethod } from "../types/order.types"
 import { vietnamLocations } from "@/src/features/account/data/locations"
+import { AccountApiService } from "@/src/features/account/api/account.service"
+import type { ReceiverAddress } from "@/src/features/account/types/account.types"
 import { formatPrice } from "@/src/data-seed/shop-data"
 
 export function CheckoutView() {
@@ -38,6 +40,10 @@ export function CheckoutView() {
   const [specificAddress, setSpecificAddress] = React.useState("")
   const [note, setNote] = React.useState("")
 
+  // Sổ thông tin người nhận đã lưu
+  const [savedAddresses, setSavedAddresses] = React.useState<ReceiverAddress[]>([])
+  const [selectedAddressId, setSelectedAddressId] = React.useState("")
+
   // Phương thức thanh toán
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>("COD")
 
@@ -52,6 +58,46 @@ export function CheckoutView() {
       if (authUser.name && !receiverName) setReceiverName(authUser.name)
     }
   }, [authUser, receiverName])
+
+  // Tải sổ thông tin người nhận đã lưu trong database
+  React.useEffect(() => {
+    if (!authUser) {
+      setSavedAddresses([])
+      setSelectedAddressId("")
+      return
+    }
+
+    let mounted = true
+    AccountApiService.getAddresses()
+      .then((data) => {
+        if (mounted) setSavedAddresses(Array.isArray(data) ? data : [])
+      })
+      .catch(() => {
+        if (mounted) setSavedAddresses([])
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [authUser])
+
+  const applyAddress = React.useCallback((address: ReceiverAddress) => {
+    setReceiverName(address.receiverName)
+    setReceiverPhone(address.receiverPhone)
+    setSelectedProvinceId(address.provinceId)
+    setSelectedDistrictId(address.districtId)
+    setSelectedWard(address.ward)
+    setSpecificAddress(address.addressDetail)
+    setSelectedAddressId(address.id)
+  }, [])
+
+  // Tự chọn địa chỉ mặc định (hoặc địa chỉ đầu tiên) khi vừa tải xong.
+  React.useEffect(() => {
+    if (selectedAddressId || savedAddresses.length === 0) return
+    const preferred =
+      savedAddresses.find((address) => address.isDefault) ?? savedAddresses[0]
+    if (preferred) applyAddress(preferred)
+  }, [savedAddresses, selectedAddressId, applyAddress])
 
   // Lấy danh sách quận/huyện dựa theo tỉnh thành đã chọn
   const currentProvince = React.useMemo(() => {
@@ -207,6 +253,62 @@ export function CheckoutView() {
                   </span>
                   Thông tin người nhận hàng
                 </h2>
+
+                {savedAddresses.length > 0 && (
+                  <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-1">
+                      <p className="text-xs font-bold text-slate-700">
+                        Chọn từ thông tin người nhận đã lưu
+                      </p>
+                      <span className="text-[11px] text-slate-500">
+                        {savedAddresses.length} địa chỉ
+                      </span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {savedAddresses.map((address) => {
+                        const selected = selectedAddressId === address.id
+                        const fullAddress = [
+                          address.addressDetail,
+                          address.ward,
+                          address.district,
+                          address.province,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")
+
+                        return (
+                          <button
+                            key={address.id}
+                            type="button"
+                            onClick={() => applyAddress(address)}
+                            className={`rounded-md border p-3 text-left transition ${
+                              selected
+                                ? "border-[#ee4d2d] bg-white ring-1 ring-[#ee4d2d]"
+                                : "border-slate-200 bg-white hover:border-orange-300"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <strong className="truncate text-xs font-bold text-slate-800">
+                                {address.receiverName}
+                              </strong>
+                              {address.isDefault && (
+                                <span className="shrink-0 rounded-full bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                                  Mặc định
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-0.5 text-[11px] text-slate-500">
+                              {address.receiverPhone}
+                            </p>
+                            <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-slate-500">
+                              {fullAddress}
+                            </p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>

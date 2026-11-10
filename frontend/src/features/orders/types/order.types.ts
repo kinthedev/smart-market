@@ -48,3 +48,44 @@ export interface Order {
   updatedAt: string;
   items: OrderItem[];
 }
+
+/** Thông tin khách hàng đặt đơn (chỉ trả về ở API quản trị). */
+export interface OrderCustomer {
+  id: string;
+  name: string | null;
+  email: string;
+}
+
+/** Đơn hàng kèm thông tin khách hàng dành cho trang quản trị. */
+export interface AdminOrder extends Order {
+  user?: OrderCustomer | null;
+}
+
+export interface OrderPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface OrderStats {
+  total: number;
+  pending: number;
+  confirmed: number;
+  shipping: number;
+  delivered: number;
+  cancelled: number;
+}
+
+export interface AdminOrderResult {
+  items: AdminOrder[];
+  stats: OrderStats;
+  pagination: OrderPagination;
+}
+
+export interface AdminOrderQuery {
+  page?: number;
+  limit?: number;
+  status?: OrderStatus;
+  search?: string;
+}

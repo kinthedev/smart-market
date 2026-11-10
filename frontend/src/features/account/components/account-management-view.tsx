@@ -10,17 +10,19 @@ import {
   ChevronRight,
   ArrowLeft,
   AlertTriangle,
-  Loader2,
+  Users,
 } from "lucide-react"
 import { SiteHeader } from "@/src/components/site-header"
 import { SiteFooter } from "@/src/components/site-footer"
 import { PersonalInfoSection } from "./personal-info-section"
 import { AddressSection } from "./address-section"
+import { ReceiverInfoSection } from "./receiver-info-section"
 import { SecuritySection } from "./security-section"
 import { useAuth } from "@/src/features/auth/hooks/use-auth"
-import type { AccountData, UserProfile, UserAddress } from "../types/account.types"
+import { AccountApiService } from "../api/account.service"
+import type { AccountData, ReceiverAddress, UserProfile } from "../types/account.types"
 
-type ActiveTab = "profile" | "address" | "security"
+type ActiveTab = "profile" | "address" | "receivers" | "security"
 
 const initialMockAccountData: AccountData = {
   profile: {
@@ -30,12 +32,6 @@ const initialMockAccountData: AccountData = {
     phone: "",
     dateOfBirth: "",
     gender: "Nam",
-  },
-  address: {
-    provinceId: "",
-    districtId: "",
-    ward: "",
-    specificAddress: "",
   },
   security: {
     username: "",
@@ -52,6 +48,36 @@ export function AccountManagementView() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false)
   const [pendingTabChange, setPendingTabChange] = useState<ActiveTab | null>(null)
+
+  // Sổ địa chỉ người nhận (dữ liệu thật từ database)
+  const [addresses, setAddresses] = useState<ReceiverAddress[]>([])
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false)
+  const [addressError, setAddressError] = useState("")
+
+  const loadAddresses = async () => {
+    setIsLoadingAddresses(true)
+    setAddressError("")
+    try {
+      const data = await AccountApiService.getAddresses()
+      setAddresses(data)
+    } catch (error: any) {
+      setAddressError(error?.message || "Không thể tải sổ địa chỉ người nhận.")
+      setAddresses([])
+    } finally {
+      setIsLoadingAddresses(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!authUser) {
+      setAddresses([])
+      return
+    }
+    void loadAddresses()
+  }, [authUser?.id])
+
+  const defaultAddress = addresses.find((item) => item.isDefault) ?? null
+  const suggestedPhone = (authUser as any)?.phone || ""
 
   // Sync authUser into profile data if logged in
   useEffect(() => {
@@ -111,14 +137,6 @@ export function AccountManagementView() {
     return true
   }
 
-  // Save handler for Address
-  const handleSaveAddress = async (newAddress: UserAddress): Promise<boolean> => {
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    setAccountData((prev) => ({ ...prev, address: newAddress }))
-    setHasUnsavedChanges(false)
-    return true
-  }
-
   // Password change handler
   const handleChangePassword = async (data: { currentPassword: string; newPassword: string }): Promise<boolean> => {
     await new Promise((resolve) => setTimeout(resolve, 800))
@@ -143,6 +161,12 @@ export function AccountManagementView() {
       icon: MapPin,
     },
     {
+      id: "receivers" as const,
+      label: "Thông tin người nhận",
+      description: "Lưu nhiều người nhận để chọn khi thanh toán",
+      icon: Users,
+    },
+    {
       id: "security" as const,
       label: "Bảo mật tài khoản",
       description: "Tên đăng nhập & đổi mật khẩu",
@@ -160,6 +184,7 @@ export function AccountManagementView() {
                 name: authUser.name || authUser.email || "Khách hàng",
                 email: authUser.email,
                 avatarUrl: authUser.image || accountData.profile.avatarUrl || undefined,
+                isAdmin: authUser.isAdmin,
               }
             : null
         }
@@ -304,6 +329,13 @@ export function AccountManagementView() {
           {/* Right Column: Content Card */}
           <section className="md:col-span-8 lg:col-span-9">
             <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-7">
+              {addressError && (activeTab === "address" || activeTab === "receivers") && (
+                <div className="mb-4 flex items-start gap-2 rounded-sm border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                  <span>{addressError}</span>
+                </div>
+              )}
+
               {activeTab === "profile" && (
                 <PersonalInfoSection
                   initialData={accountData.profile}
@@ -314,8 +346,20 @@ export function AccountManagementView() {
 
               {activeTab === "address" && (
                 <AddressSection
-                  initialData={accountData.address}
-                  onSave={handleSaveAddress}
+                  defaultAddress={defaultAddress}
+                  isLoading={isLoadingAddresses}
+                  suggestedName={authUser?.name || ""}
+                  suggestedPhone={suggestedPhone}
+                  onSaved={loadAddresses}
+                  onHasUnsavedChanges={setHasUnsavedChanges}
+                />
+              )}
+
+              {activeTab === "receivers" && (
+                <ReceiverInfoSection
+                  addresses={addresses}
+                  isLoading={isLoadingAddresses}
+                  onChanged={loadAddresses}
                   onHasUnsavedChanges={setHasUnsavedChanges}
                 />
               )}

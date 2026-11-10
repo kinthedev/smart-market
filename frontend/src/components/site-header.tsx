@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { CircleHelp, Heart, LayoutDashboard, Link2, LogOut, Search, ShoppingBag, ShoppingCart, Smartphone } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, CircleHelp, Heart, LayoutDashboard, Link2, LogOut, Package, Search, ShoppingBag, ShoppingCart, Smartphone, UserRound } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -23,9 +23,34 @@ const topLinks = [
 
 export function SiteHeader({ user, onLogout, onSearch }: SiteHeaderProps) {
     const [query, setQuery] = useState('')
+    const [profileOpen, setProfileOpen] = useState(false)
+    const profileRef = useRef<HTMLDivElement>(null)
     const router = useRouter()
     const { totalQuantity } = useCart()
     const { count: wishlistCount } = useWishlist()
+
+    // Đóng menu tài khoản khi bấm ra ngoài hoặc nhấn Escape.
+    useEffect(() => {
+        if (!profileOpen) return
+
+        const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+            if (!profileRef.current?.contains(event.target as Node)) {
+                setProfileOpen(false)
+            }
+        }
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setProfileOpen(false)
+        }
+
+        document.addEventListener('mousedown', handlePointerDown)
+        document.addEventListener('touchstart', handlePointerDown)
+        document.addEventListener('keydown', handleKeyDown)
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown)
+            document.removeEventListener('touchstart', handlePointerDown)
+            document.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [profileOpen])
 
     const submit = (value: string) => {
         const keyword = value.trim()
@@ -72,19 +97,81 @@ export function SiteHeader({ user, onLogout, onSearch }: SiteHeaderProps) {
                                 <span aria-hidden="true" className="h-3 w-px bg-white/50" />
                             </>
                         )}
-                        <Link
-                            href="/account"
-                            className="flex items-center gap-2 transition-opacity hover:opacity-90"
-                            title="Quản lý tài khoản"
+                        <div
+                            ref={profileRef}
+                            className="relative"
+                            onMouseEnter={() => setProfileOpen(true)}
+                            onMouseLeave={() => setProfileOpen(false)}
                         >
-                            <Avatar size="sm">
-                                {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
-                                <AvatarFallback className="bg-white text-[10px] font-bold text-primary">
-                                    {user.name.slice(0, 1).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
-                            <span className="max-w-28 truncate font-medium hover:underline">{user.name}</span>
-                        </Link>
+                            <button
+                                type="button"
+                                onClick={() => setProfileOpen((open) => !open)}
+                                onFocus={() => setProfileOpen(true)}
+                                aria-expanded={profileOpen}
+                                aria-haspopup="menu"
+                                className="flex items-center gap-2 rounded px-1 py-0.5 transition-opacity hover:opacity-90 hover:cursor-pointer"
+                                title="Quản lý tài khoản"
+                            >
+                                <Avatar size="sm">
+                                    {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
+                                    <AvatarFallback className="bg-white text-[10px] font-bold text-primary">
+                                        {user.name.slice(0, 1).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span className="max-w-28 truncate font-medium hover:underline">{user.name}</span>
+                                <ChevronDown
+                                    className={`size-3.5 transition-transform ${profileOpen ? 'rotate-180' : ''}`}
+                                    aria-hidden="true"
+                                />
+                            </button>
+
+                            <div
+                                className={`absolute right-0 top-full z-50 w-60 pt-2 transition-all duration-150 ${profileOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-1 opacity-0'}`}
+                            >
+                                <div
+                                    role="menu"
+                                    aria-label="Menu tài khoản"
+                                    className="overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-700 shadow-xl"
+                                >
+                                    <Link
+                                        href="/account"
+                                        role="menuitem"
+                                        onClick={() => setProfileOpen(false)}
+                                        className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-orange-50"
+                                    >
+                                        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                                            <UserRound className="size-4" aria-hidden="true" />
+                                        </span>
+                                        <span>
+                                            <span className="block text-sm font-semibold text-slate-800">
+                                                Tài khoản của tôi
+                                            </span>
+                                            <span className="block text-[11px] text-slate-500">
+                                                Thông tin cá nhân & địa chỉ
+                                            </span>
+                                        </span>
+                                    </Link>
+                                    <Link
+                                        href="/orders"
+                                        role="menuitem"
+                                        onClick={() => setProfileOpen(false)}
+                                        className="flex items-start gap-3 border-t border-slate-100 px-4 py-3 transition-colors hover:bg-orange-50"
+                                    >
+                                        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                            <Package className="size-4" aria-hidden="true" />
+                                        </span>
+                                        <span>
+                                            <span className="block text-sm font-semibold text-slate-800">
+                                                Đơn mua
+                                            </span>
+                                            <span className="block text-[11px] text-slate-500">
+                                                Theo dõi đơn hàng đã đặt
+                                            </span>
+                                        </span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
                         <span aria-hidden="true" className="h-3 w-px bg-white/50" />
                         <button
                             type="button"

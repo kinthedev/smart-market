@@ -1,114 +1,91 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
-import { MapPin, Check, AlertCircle } from "lucide-react"
+import React, { useEffect, useMemo, useState } from "react"
+import { MapPin, Check, AlertCircle, Phone, User, Loader2 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
-import { Input } from "@/src/components/ui/input"
-import { Select } from "@/src/components/ui/select"
-import { Field, FieldLabel } from "@/src/components/ui/field"
 import { vietnamLocations } from "../data/locations"
-import type { UserAddress } from "../types/account.types"
-import { addressSchema } from "../schemas/account.schema"
+import { receiverInfoSchema } from "../schemas/account.schema"
+import { AccountApiService } from "../api/account.service"
+import { AddressFormFields, formatFullAddress } from "./address-form-fields"
+import type { AddressFormValue, ReceiverAddress } from "../types/account.types"
 
 interface AddressSectionProps {
-  initialData: UserAddress
-  onSave: (data: UserAddress) => Promise<boolean>
+  defaultAddress: ReceiverAddress | null
+  isLoading?: boolean
+  suggestedName?: string
+  suggestedPhone?: string
+  onSaved: () => Promise<void> | void
   onHasUnsavedChanges: (hasChanges: boolean) => void
 }
 
+const emptyForm: AddressFormValue = {
+  receiverName: "",
+  receiverPhone: "",
+  provinceId: "",
+  districtId: "",
+  ward: "",
+  addressDetail: "",
+}
+
 export function AddressSection({
-  initialData,
-  onSave,
+  defaultAddress,
+  isLoading = false,
+  suggestedName = "",
+  suggestedPhone = "",
+  onSaved,
   onHasUnsavedChanges,
 }: AddressSectionProps) {
-  const [formData, setFormData] = useState<UserAddress>(initialData)
-  const [savedData, setSavedData] = useState<UserAddress>(initialData)
+  const [formData, setFormData] = useState<AddressFormValue>(emptyForm)
+  const [savedData, setSavedData] = useState<AddressFormValue>(emptyForm)
   const [isEditing, setIsEditing] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
-  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null)
+  const [notification, setNotification] = useState<{
+    type: "success" | "error"
+    message: string
+  } | null>(null)
 
-  // Find currently selected province object
-  const currentProvince = useMemo(() => {
-    return vietnamLocations.find((p) => p.id === formData.provinceId) || null
-  }, [formData.provinceId])
+  // Đồng bộ dữ liệu mặc định từ DB vào form.
+  useEffect(() => {
+    const next: AddressFormValue = defaultAddress
+      ? {
+          receiverName: defaultAddress.receiverName,
+          receiverPhone: defaultAddress.receiverPhone,
+          provinceId: defaultAddress.provinceId,
+          districtId: defaultAddress.districtId,
+          ward: defaultAddress.ward,
+          addressDetail: defaultAddress.addressDetail,
+        }
+      : {
+          ...emptyForm,
+          receiverName: suggestedName,
+          receiverPhone: suggestedPhone,
+        }
 
-  // Find currently selected district object
-  const currentDistrict = useMemo(() => {
-    if (!currentProvince) return null
-    return currentProvince.districts.find((d) => d.id === formData.districtId) || null
-  }, [currentProvince, formData.districtId])
+    setSavedData(next)
+    setFormData(next)
+    onHasUnsavedChanges(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultAddress?.id, suggestedName, suggestedPhone])
 
-  // District options based on chosen province
-  const districtOptions = useMemo(() => {
-    return currentProvince ? currentProvince.districts : []
-  }, [currentProvince])
+  const fullAddress = useMemo(() => {
+    if (!defaultAddress) return ""
+    return formatFullAddress({
+      addressDetail: defaultAddress.addressDetail,
+      ward: defaultAddress.ward,
+      district: defaultAddress.district,
+      province: defaultAddress.province,
+    })
+  }, [defaultAddress])
 
-  // Ward options based on chosen district
-  const wardOptions = useMemo(() => {
-    return currentDistrict ? currentDistrict.wards : []
-  }, [currentDistrict])
-
-  const checkChanges = (newData: UserAddress) => {
-    const hasChanges = JSON.stringify(newData) !== JSON.stringify(savedData)
-    onHasUnsavedChanges(hasChanges)
+  const checkChanges = (next: AddressFormValue) => {
+    onHasUnsavedChanges(JSON.stringify(next) !== JSON.stringify(savedData))
   }
 
-  // Handle Province change -> reset district and ward
-  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newProvinceId = e.target.value
-    const updated: UserAddress = {
-      ...formData,
-      provinceId: newProvinceId,
-      districtId: "",
-      ward: "",
-    }
-    setFormData(updated)
-    checkChanges(updated)
-    clearError("provinceId")
-  }
-
-  // Handle District change -> reset ward
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newDistrictId = e.target.value
-    const updated: UserAddress = {
-      ...formData,
-      districtId: newDistrictId,
-      ward: "",
-    }
-    setFormData(updated)
-    checkChanges(updated)
-    clearError("districtId")
-  }
-
-  const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const updated: UserAddress = {
-      ...formData,
-      ward: e.target.value,
-    }
-    setFormData(updated)
-    checkChanges(updated)
-    clearError("ward")
-  }
-
-  const handleSpecificAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const updated: UserAddress = {
-      ...formData,
-      specificAddress: e.target.value,
-    }
-    setFormData(updated)
-    checkChanges(updated)
-    clearError("specificAddress")
-  }
-
-  const clearError = (field: string) => {
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev }
-        delete next[field]
-        return next
-      })
-    }
+  const handleChange = (next: AddressFormValue) => {
+    setFormData(next)
+    checkChanges(next)
+    setErrors({})
     if (notification) setNotification(null)
   }
 
@@ -122,53 +99,82 @@ export function AddressSection({
 
   const handleSave = async () => {
     setNotification(null)
-    const result = addressSchema.safeParse(formData)
+    const result = receiverInfoSchema.safeParse(formData)
     if (!result.success) {
       const fieldErrors: Record<string, string> = {}
       result.error.issues.forEach((issue) => {
         fieldErrors[issue.path[0] as string] = issue.message
       })
       setErrors(fieldErrors)
-      setNotification({ type: "error", message: "Vui lòng nhập đầy đủ các thông tin địa chỉ." })
+      setNotification({
+        type: "error",
+        message: "Vui lòng nhập đầy đủ và chính xác thông tin địa chỉ.",
+      })
+      return
+    }
+
+    const province = vietnamLocations.find((p) => p.id === formData.provinceId)
+    const district = province?.districts.find((d) => d.id === formData.districtId)
+
+    if (!province || !district) {
+      setNotification({
+        type: "error",
+        message: "Tỉnh/Thành phố hoặc Quận/Huyện không hợp lệ.",
+      })
       return
     }
 
     setIsSaving(true)
     try {
-      const success = await onSave(formData)
-      if (success) {
-        setSavedData(formData)
-        setIsEditing(false)
-        onHasUnsavedChanges(false)
-        setNotification({ type: "success", message: "Cập nhật địa chỉ thành công!" })
-      } else {
-        setNotification({ type: "error", message: "Không thể lưu địa chỉ. Vui lòng thử lại." })
+      const payload = {
+        ...formData,
+        province: province.name,
+        district: district.name,
+        isDefault: true,
       }
-    } catch {
-      setNotification({ type: "error", message: "Đã xảy ra lỗi khi lưu địa chỉ." })
+
+      if (defaultAddress) {
+        await AccountApiService.updateAddress(defaultAddress.id, payload)
+      } else {
+        await AccountApiService.createAddress(payload)
+      }
+
+      await onSaved()
+      setSavedData(formData)
+      setIsEditing(false)
+      onHasUnsavedChanges(false)
+      setNotification({
+        type: "success",
+        message: "Lưu địa chỉ cá nhân thành công!",
+      })
+    } catch (error: any) {
+      setNotification({
+        type: "error",
+        message: error?.message || "Không thể lưu địa chỉ. Vui lòng thử lại.",
+      })
     } finally {
       setIsSaving(false)
     }
   }
 
-  // Helper string representation
-  const fullAddressString = useMemo(() => {
-    const parts = [
-      formData.specificAddress,
-      formData.ward,
-      currentDistrict?.name,
-      currentProvince?.name,
-    ].filter(Boolean)
-    return parts.length > 0 ? parts.join(", ") : "Chưa thiết lập địa chỉ"
-  }, [formData.specificAddress, formData.ward, currentDistrict, currentProvince])
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <Loader2 className="size-4 animate-spin" />
+        Đang tải địa chỉ cá nhân...
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
       {/* Header bar */}
       <div className="flex flex-col gap-1 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 sm:text-xl">Địa Chỉ Giao Hàng</h2>
-          <p className="text-xs text-slate-500 sm:text-sm">Quản lý địa chỉ nhận hàng thuận tiện cho việc mua sắm</p>
+          <h2 className="text-lg font-bold text-slate-900 sm:text-xl">Địa Chỉ Cá Nhân</h2>
+          <p className="text-xs text-slate-500 sm:text-sm">
+            Địa chỉ mặc định dùng khi đặt hàng và được lưu trực tiếp vào tài khoản
+          </p>
         </div>
         {!isEditing ? (
           <Button
@@ -177,7 +183,7 @@ export function AddressSection({
             onClick={() => setIsEditing(true)}
             className="mt-2 h-9 self-start rounded-sm border-orange-500 text-xs font-semibold text-orange-600 hover:bg-orange-50 sm:mt-0"
           >
-            Chỉnh sửa
+            {defaultAddress ? "Chỉnh sửa" : "Thêm địa chỉ"}
           </Button>
         ) : (
           <div className="mt-3 flex items-center gap-2 sm:mt-0">
@@ -219,112 +225,62 @@ export function AddressSection({
         </div>
       )}
 
-      {/* Overview display card when not editing */}
-      {!isEditing && (
-        <div className="rounded-lg border border-orange-100 bg-orange-50/40 p-4">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-orange-100 p-2 text-orange-600">
-              <MapPin className="size-5" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-orange-800 uppercase tracking-wide">Địa chỉ mặc định hiện tại</p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">{fullAddressString}</p>
+      {/* Chế độ xem */}
+      {!isEditing &&
+        (defaultAddress ? (
+          <div className="rounded-lg border border-orange-100 bg-orange-50/40 p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-orange-100 p-2 text-orange-600">
+                <MapPin className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-orange-800">
+                  Địa chỉ mặc định hiện tại
+                </p>
+                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-bold text-slate-900">
+                  <span className="inline-flex items-center gap-1">
+                    <User className="size-3.5 text-slate-500" />
+                    {defaultAddress.receiverName}
+                  </span>
+                  <span className="inline-flex items-center gap-1 font-medium text-slate-600">
+                    <Phone className="size-3.5 text-slate-500" />
+                    {defaultAddress.receiverPhone}
+                  </span>
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-700">{fullAddress}</p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/60 p-8 text-center">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-white text-slate-400 shadow-xs">
+              <MapPin className="size-6" />
+            </div>
+            <p className="mt-3 text-sm font-semibold text-slate-700">
+              Bạn chưa thiết lập địa chỉ cá nhân
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Thêm địa chỉ để điền nhanh khi thanh toán đơn hàng.
+            </p>
+            <Button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="mt-4 h-9 rounded-sm bg-orange-500 px-4 text-xs font-bold text-white hover:bg-orange-600"
+            >
+              Thêm địa chỉ ngay
+            </Button>
+          </div>
+        ))}
+
+      {/* Chế độ chỉnh sửa */}
+      {isEditing && (
+        <AddressFormFields
+          value={formData}
+          onChange={handleChange}
+          errors={errors}
+          disabled={isSaving}
+        />
       )}
-
-      {/* Address selectors */}
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {/* Tỉnh / Thành phố */}
-          <Field>
-            <FieldLabel className="text-xs font-semibold text-slate-700">
-              Tỉnh / Thành phố <span className="text-red-500">*</span>
-            </FieldLabel>
-            <div className="mt-1">
-              <Select
-                value={formData.provinceId}
-                disabled={!isEditing}
-                onChange={handleProvinceChange}
-                className="h-10 text-sm"
-              >
-                <option value="">-- Chọn Tỉnh / Thành phố --</option>
-                {vietnamLocations.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            {errors.provinceId && <p className="mt-1 text-xs text-red-500">{errors.provinceId}</p>}
-          </Field>
-
-          {/* Quận / Huyện */}
-          <Field>
-            <FieldLabel className="text-xs font-semibold text-slate-700">
-              Quận / Huyện <span className="text-red-500">*</span>
-            </FieldLabel>
-            <div className="mt-1">
-              <Select
-                value={formData.districtId}
-                disabled={!isEditing || !formData.provinceId}
-                onChange={handleDistrictChange}
-                className="h-10 text-sm"
-              >
-                <option value="">-- Chọn Quận / Huyện --</option>
-                {districtOptions.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            {errors.districtId && <p className="mt-1 text-xs text-red-500">{errors.districtId}</p>}
-          </Field>
-
-          {/* Phường / Xã */}
-          <Field>
-            <FieldLabel className="text-xs font-semibold text-slate-700">
-              Phường / Xã <span className="text-red-500">*</span>
-            </FieldLabel>
-            <div className="mt-1">
-              <Select
-                value={formData.ward}
-                disabled={!isEditing || !formData.districtId}
-                onChange={handleWardChange}
-                className="h-10 text-sm"
-              >
-                <option value="">-- Chọn Phường / Xã --</option>
-                {wardOptions.map((w) => (
-                  <option key={w} value={w}>
-                    {w}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            {errors.ward && <p className="mt-1 text-xs text-red-500">{errors.ward}</p>}
-          </Field>
-        </div>
-
-        {/* Địa chỉ cụ thể */}
-        <Field>
-          <FieldLabel className="text-xs font-semibold text-slate-700">
-            Địa chỉ cụ thể (Số nhà, tên đường, toà nhà...) <span className="text-red-500">*</span>
-          </FieldLabel>
-          <div className="relative mt-1">
-            <Input
-              value={formData.specificAddress}
-              disabled={!isEditing}
-              onChange={handleSpecificAddressChange}
-              placeholder="Ví dụ: 123 Đường Nguyễn Huệ, Tòa nhà Bitexco"
-              className="h-10 text-sm"
-            />
-            <MapPin className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          </div>
-          {errors.specificAddress && <p className="mt-1 text-xs text-red-500">{errors.specificAddress}</p>}
-        </Field>
-      </div>
     </div>
   )
 }

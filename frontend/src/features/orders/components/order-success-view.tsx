@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { CheckCircle2, Copy, ArrowRight, ShoppingBag, ShieldCheck, Truck, Home } from "lucide-react"
+import { CheckCircle2, Copy, ArrowRight, Package, ShoppingBag, ShieldCheck, Truck, Home } from "lucide-react"
 import type { Order, PaymentMethod } from "../types/order.types"
 import { formatPrice } from "@/src/data-seed/shop-data"
 
@@ -181,10 +181,10 @@ export function OrderSuccessView({ order, paymentMethod }: OrderSuccessViewProps
             <Home size={15} /> Về trang chủ mua sắm
           </Link>
           <Link
-            href="/cart"
+            href="/orders"
             className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 py-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            <ShoppingBag size={15} /> Xem giỏ hàng
+            <Package size={15} /> Đơn mua của tôi
           </Link>
         </div>
       </div>

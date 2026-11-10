@@ -23,14 +23,37 @@ model User {
   province      String?
   status        String     @default("Hoạt động")
   ward          String?
-  accounts      Account[]
-  comments      Comment[]
-  orders        Order[]
-  reviews       Review[]
-  sessions      Session[]
-  wishlists     Wishlist[]
+  accounts          Account[]
+  comments          Comment[]
+  orders            Order[]
+  reviews           Review[]
+  sessions          Session[]
+  shippingAddresses ShippingAddress[]
+  wishlists         Wishlist[]
 
   @@map("user")
+}
+
+/// Sổ địa chỉ người nhận của khách hàng.
+/// Mỗi khách hàng có thể lưu nhiều thông tin người nhận; một bản ghi được đánh dấu mặc định.
+model ShippingAddress {
+  id            String   @id @default(cuid())
+  userId        String
+  receiverName  String
+  receiverPhone String
+  provinceId    String
+  districtId    String
+  province      String
+  district      String
+  ward          String
+  addressDetail String
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("shipping_address")
 }
 
 model Session {

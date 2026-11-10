@@ -2,6 +2,29 @@
 
 Tài liệu này cung cấp toàn bộ quy tắc kiến trúc, công nghệ và tiêu chuẩn lập trình của dự án **SmartMarket** để khi bắt đầu phiên làm việc (context) mới, AI Agent có thể hiểu ngay lập tức và tuân thủ tuyệt đối.
 
+# Prisma Migration Rules
+
+When working with Prisma ORM, strictly follow these rules:
+
+1. NEVER modify, rename, or delete an existing migration that has already been applied to the database.
+2. NEVER rewrite old migration.sql files to fix database synchronization issues.
+3. ALWAYS create a new migration for schema changes.
+4. NEVER run `prisma migrate reset` without explicit user approval.
+5. NEVER run `prisma db push` as a workaround for migration errors.
+6. NEVER manually modify the `_prisma_migrations` table.
+7. Before creating a migration, inspect the current schema and migration history.
+8. After creating a migration, verify its SQL and migration status.
+9. If migration drift or checksum mismatch occurs, STOP and explain the issue. Do not attempt destructive repairs.
+10. Preserve all existing database data.
+
+Standard workflow:
+
+- Update schema.prisma.
+- Create a new migration using `npx prisma migrate dev --name <migration_name>`.
+- Review migration.sql.
+- Verify database synchronization.
+- Generate Prisma Client if needed.
+
 ---
 
 ## 1. Tổng quan Dự án (Project Overview)
@@ -129,6 +152,3 @@ npx tsc --noEmit
 cd frontend
 npm run build
 ```
-
-*(Đảm bảo `npm run build` kết thúc với `EXIT CODE 0`)*.
-đặc biệt phải chạy lênh prisma tao migration chứ ko dc tạo thăng table trong db gây ra xung đọt voi prisma

@@ -14,11 +14,24 @@ export const profileSchema = z.object({
   }),
 })
 
-export const addressSchema = z.object({
+export const receiverInfoSchema = z.object({
+  receiverName: z
+    .string()
+    .trim()
+    .min(2, "Họ tên người nhận phải có ít nhất 2 ký tự")
+    .max(80, "Họ tên người nhận tối đa 80 ký tự"),
+  receiverPhone: z
+    .string()
+    .trim()
+    .regex(/^(0|\+84)[0-9]{9,10}$/, "Số điện thoại người nhận không hợp lệ"),
   provinceId: z.string().min(1, "Vui lòng chọn Tỉnh/Thành phố"),
   districtId: z.string().min(1, "Vui lòng chọn Quận/Huyện"),
   ward: z.string().min(1, "Vui lòng chọn Phường/Xã"),
-  specificAddress: z.string().min(5, "Vui lòng nhập địa chỉ cụ thể (tối thiểu 5 ký tự)"),
+  addressDetail: z
+    .string()
+    .trim()
+    .min(5, "Vui lòng nhập địa chỉ cụ thể (tối thiểu 5 ký tự)")
+    .max(255, "Địa chỉ cụ thể tối đa 255 ký tự"),
 })
 
 export const passwordChangeSchema = z
