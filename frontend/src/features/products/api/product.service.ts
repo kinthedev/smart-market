@@ -1,3 +1,4 @@
+import { env } from "@/src/lib/env";
 import type {
   Product,
   Category,
@@ -5,8 +6,7 @@ import type {
   ProductListResponse,
 } from "../types/product.types";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND_URL = env.BACKEND_URL;
 
 export class ProductApiService {
   static async getCategories(): Promise<Category[]> {

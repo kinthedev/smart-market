@@ -17,17 +17,18 @@ const isProduction =
 	process.env.NODE_ENV === "production" ||
 	Boolean(rawBackendUrl?.startsWith("https://"))
 
-// Ở production, bắt buộc phải khai báo URL thật trong .env.
-// Tuyệt đối không fallback về localhost để tránh Google OAuth redirect sai môi trường.
-if (isProduction && !rawBackendUrl) {
-	throw new Error("Missing required environment variable: BETTER_AUTH_URL")
-}
-if (isProduction && !rawFrontendUrl) {
-	throw new Error("Missing required environment variable: FRONTEND_URL")
-}
+// Ở production, ưu tiên URL từ biến môi trường; nếu chưa khai báo thì tự động fallback về domain production chính thức.
+const DEFAULT_PROD_BACKEND_URL = "https://smart-market-zogb.onrender.com"
+const DEFAULT_PROD_FRONTEND_URL = "https://smart-market-theta.vercel.app"
 
-const backendUrl = normalizeUrl(rawBackendUrl || "http://localhost:4000")
-const frontendUrl = normalizeUrl(rawFrontendUrl || "http://localhost:3000")
+const backendUrl = normalizeUrl(
+	rawBackendUrl ||
+		(isProduction ? DEFAULT_PROD_BACKEND_URL : "http://localhost:4000"),
+)
+const frontendUrl = normalizeUrl(
+	rawFrontendUrl ||
+		(isProduction ? DEFAULT_PROD_FRONTEND_URL : "http://localhost:3000"),
+)
 
 const requiredEnv = (name: string, value: string | undefined): string => {
 	if (!value) {

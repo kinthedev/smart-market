@@ -1,6 +1,7 @@
+import { env } from "@/src/lib/env"
 import type { Customer } from "../types/customer.types"
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000"
+const BACKEND_URL = env.BACKEND_URL
 
 export class CustomerService {
   static async fetchCustomers(params?: { search?: string; status?: string }): Promise<Customer[]> {

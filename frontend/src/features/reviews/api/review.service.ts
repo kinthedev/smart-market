@@ -1,11 +1,11 @@
+import { env } from "@/src/lib/env";
 import type {
   Review,
   ReviewListResponse,
   ReviewSummary,
 } from "../types/review.types";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND_URL = env.BACKEND_URL;
 
 type ReviewPayload = {
   rating: number;

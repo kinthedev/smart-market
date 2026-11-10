@@ -11,6 +11,7 @@ Tài liệu này cung cấp toàn bộ quy tắc kiến trúc, công nghệ và 
 - **Cấu trúc Repository:** Monorepo gồm 2 thư mục chính:
   - `frontend/`: Ứng dụng Next.js (App Router, Turbopack, React 19, Tailwind CSS 4)
   - `backend/`: REST API Server (Node.js, Express, Better Auth, Prisma 7, PostgreSQL,zod)
+dự án này  có chạy trên môi trường production render vercel neon cloudinary,các biến phải có 2 lựa chọn,khi len production thì đảm bảo cho nó ko bị lỗi
 
 ---
 

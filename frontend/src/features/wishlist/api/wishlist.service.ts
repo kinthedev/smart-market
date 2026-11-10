@@ -1,5 +1,6 @@
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+import { env } from "@/src/lib/env";
+
+const BACKEND_URL = env.BACKEND_URL;
 
 export type WishlistToggleResult = {
   liked: boolean;

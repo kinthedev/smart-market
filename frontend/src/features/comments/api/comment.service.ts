@@ -1,7 +1,7 @@
+import { env } from "@/src/lib/env";
 import type { Comment, CommentListResponse } from "../types/comment.types";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND_URL = env.BACKEND_URL;
 
 async function parseResponse<T>(res: Response): Promise<T> {
   const data = await res.json().catch(() => ({}));
