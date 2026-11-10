@@ -17,6 +17,15 @@ const app = express();
 // 1. Cấu hình Trust Proxy (Bắt buộc khi deploy Render / reverse proxy để nhận diện HTTPS và set cookie)
 app.set("trust proxy", 1);
 
+// Đảm bảo request luôn có header x-forwarded-for (ở localhost fallback về IP client hoặc 127.0.0.1)
+// để Better Auth Rate Limiter không bị cảnh báo thiếu IP client
+app.use((req, _res, next) => {
+  if (!req.headers["x-forwarded-for"]) {
+    req.headers["x-forwarded-for"] = req.ip || req.socket.remoteAddress || "127.0.0.1";
+  }
+  next();
+});
+
 // 2. CORS Configuration hỗ trợ cả Localhost và Vercel Production / Preview URLs
 const isProduction =
   process.env.NODE_ENV === "production" ||

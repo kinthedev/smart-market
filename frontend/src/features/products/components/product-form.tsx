@@ -78,13 +78,16 @@ export function ProductForm({
                 credentials: "include", // Quan trọng để gửi kèm Session Cookie
             })
 
-            if (!response.ok) throw new Error("Upload ảnh thất bại")
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null)
+                throw new Error(errorData?.message || "Upload ảnh thất bại")
+            }
             
             const data = await response.json()
             handleImageChange(index, "url", data.url)
-        } catch (err) {
+        } catch (err: any) {
             console.error(err)
-            alert("Lỗi khi tải ảnh lên server!")
+            alert(err?.message || "Lỗi khi tải ảnh lên server!")
         } finally {
             setIsUploading(null)
         }
