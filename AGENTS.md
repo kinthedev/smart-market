@@ -130,3 +130,4 @@ npm run build
 ```
 
 *(Đảm bảo `npm run build` kết thúc với `EXIT CODE 0`)*.
+đặc biệt phải chạy lênh prisma tao migration chứ ko dc tạo thăng table trong db gây ra xung đọt voi prisma
