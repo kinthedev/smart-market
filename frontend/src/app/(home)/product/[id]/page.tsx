@@ -172,9 +172,7 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = () => {
     if (!addCurrentSelection()) return;
-    showNotice(
-      "Đã ghi nhận đơn mua hàng. Chúng tôi sẽ liên hệ xác nhận đơn của bạn."
-    );
+    router.push("/checkout");
   };
 
   return (

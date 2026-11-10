@@ -12,8 +12,9 @@ import {
 import { useAuth } from '@/src/features/auth/hooks/use-auth'
 import { ProductManager } from '@/src/features/products/components/product-manager'
 import { CustomerManager } from '@/src/features/customers/components/customer-manager'
+import { ReviewManager } from '@/src/features/reviews/components/review-manager'
 
-type Trang = 'Tổng quan' | 'Đơn hàng' | 'Sản phẩm' | 'Khách hàng' | 'Kho hàng'
+type Trang = 'Tổng quan' | 'Đơn hàng' | 'Sản phẩm' | 'Khách hàng' | 'Kho hàng' | 'Đánh giá'
 
 type DonHang = { ma: string; khach: string; ngay: string; tong: string; phuongThuc: string; trangThai: string }
 type SanPham = { ten: string; ma: string; daBan: number; doanhThu: string; mau: string; anh: string }
@@ -41,6 +42,7 @@ export function AdminDashboard() {
             '#san-pham': 'Sản phẩm',
             '#khach-hang': 'Khách hàng',
             '#kho-hang': 'Kho hàng',
+            '#danh-gia': 'Đánh giá',
         }
 
         const currentHash = window.location.hash
@@ -50,7 +52,7 @@ export function AdminDashboard() {
         }
 
         const savedTab = localStorage.getItem('smartmarket_admin_active_tab') as Trang
-        if (savedTab && ['Tổng quan', 'Đơn hàng', 'Sản phẩm', 'Khách hàng', 'Kho hàng'].includes(savedTab)) {
+        if (savedTab && ['Tổng quan', 'Đơn hàng', 'Sản phẩm', 'Khách hàng', 'Kho hàng', 'Đánh giá'].includes(savedTab)) {
             setTrangState(savedTab)
         }
     }, [])
@@ -64,6 +66,7 @@ export function AdminDashboard() {
             'Sản phẩm': '#san-pham',
             'Khách hàng': '#khach-hang',
             'Kho hàng': '#kho-hang',
+            'Đánh giá': '#danh-gia',
         }
         if (tabToHash[t]) {
             window.history.replaceState(null, '', tabToHash[t])
@@ -120,7 +123,7 @@ export function AdminDashboard() {
                                 key={ten}
                                 className={`muc-menu ${trang === ten ? 'dang-chon' : ''}`}
                                 onClick={() => {
-                                    if (['Tổng quan', 'Đơn hàng', 'Sản phẩm', 'Khách hàng', 'Kho hàng'].includes(ten)) setTrang(ten as Trang)
+                                    if (['Tổng quan', 'Đơn hàng', 'Sản phẩm', 'Khách hàng', 'Kho hàng', 'Đánh giá'].includes(ten)) setTrang(ten as Trang)
                                     setMoMenu(false)
                                 }}
                                 title={ten}
@@ -322,6 +325,10 @@ export function AdminDashboard() {
 
                 {trang === 'Khách hàng' && (
                     <CustomerManager onNotice={hienThongBao} />
+                )}
+
+                {trang === 'Đánh giá' && (
+                    <ReviewManager onNotice={hienThongBao} />
                 )}
 
                 {trang === 'Kho hàng' && (

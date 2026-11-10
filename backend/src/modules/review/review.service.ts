@@ -202,18 +202,30 @@ export class ReviewService {
 			where.isHidden = filter.isHidden === "true"
 		}
 
-		const [total, items] = await Promise.all([
+		const [total, items, aggregate, hiddenCount] = await Promise.all([
 			prisma.review.count({ where }),
 			prisma.review.findMany({
 				where,
 				include: {
 					user: { select: userSelect },
-					product: { select: { id: true, name: true, slug: true } },
+					product: {
+						select: {
+							id: true,
+							name: true,
+							slug: true,
+							images: { take: 1, select: { url: true } },
+						},
+					},
 				},
 				orderBy: { createdAt: "desc" },
 				skip,
 				take: limit,
 			}),
+			prisma.review.aggregate({
+				_avg: { rating: true },
+				_count: { _all: true },
+			}),
+			prisma.review.count({ where: { isHidden: true } }),
 		])
 
 		return {
@@ -223,6 +235,11 @@ export class ReviewService {
 				limit,
 				total,
 				totalPages: Math.ceil(total / limit),
+			},
+			stats: {
+				totalAll: aggregate._count._all || 0,
+				avgRating: Number((aggregate._avg.rating || 0).toFixed(1)),
+				hiddenCount,
 			},
 		}
 	}

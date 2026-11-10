@@ -31,15 +31,11 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (!isLoading && !authUser) {
-      router.push("/login");
+      router.push("/login?callbackUrl=/checkout");
       return;
     }
     if (items.length === 0) return;
-
-    setNotice(
-      "Đã ghi nhận đơn hàng. Chúng tôi sẽ liên hệ xác nhận và giao hàng cho bạn."
-    );
-    window.setTimeout(() => setNotice(""), 3500);
+    router.push("/checkout");
   };
 
   return (
@@ -219,7 +215,7 @@ export default function CartPage() {
                 onClick={handleCheckout}
                 className="mt-4 flex h-11 w-full items-center justify-center rounded-sm bg-primary text-sm font-bold uppercase text-white transition-colors hover:bg-orange-600"
               >
-                Mua hàng
+                Tiến hành thanh toán
               </button>
               <Link
                 href="/"

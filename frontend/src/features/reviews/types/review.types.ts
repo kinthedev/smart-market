@@ -5,6 +5,13 @@ export interface ReviewUser {
   image?: string | null;
 }
 
+export interface ReviewProduct {
+  id: string;
+  name: string;
+  slug: string;
+  images?: { url: string }[];
+}
+
 export interface Review {
   id: string;
   rating: number;
@@ -14,11 +21,13 @@ export interface Review {
   createdAt: string;
   updatedAt: string;
   user: ReviewUser;
-  product?: {
-    id: string;
-    name: string;
-    slug: string;
-  };
+  product?: ReviewProduct;
+}
+
+export interface ReviewStats {
+  totalAll: number;
+  avgRating: number;
+  hiddenCount: number;
 }
 
 export interface ReviewSummary {
@@ -41,4 +50,5 @@ export interface Pagination {
 export interface ReviewListResponse {
   items: Review[];
   pagination: Pagination;
+  stats?: ReviewStats;
 }
