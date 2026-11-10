@@ -9,6 +9,7 @@ import { Select } from "@/src/components/ui/select"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/src/components/ui/card"
 import { ProductApiService } from "../api/product.service"
+import { env } from "@/src/lib/env"
 import type { Category, Product, ProductFormData, ProductStatus } from "../types/product.types"
 
 interface ProductFormProps {
@@ -72,7 +73,8 @@ export function ProductForm({
         formData.append("image", file)
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/v1/upload`, {
+            const backendUrl = env.BACKEND_URL || "http://localhost:4000"
+            const response = await fetch(`${backendUrl}/api/v1/upload`, {
                 method: "POST",
                 body: formData,
                 credentials: "include", // Quan trọng để gửi kèm Session Cookie
