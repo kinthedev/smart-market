@@ -1,8 +1,12 @@
--- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED');
+-- CreateEnum (An toàn: Bỏ qua nếu enum đã tồn tại)
+DO $$ BEGIN
+    CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateTable
-CREATE TABLE "order" (
+-- CreateTable order (An toàn: Bỏ qua nếu bảng đã tồn tại)
+CREATE TABLE IF NOT EXISTS "order" (
     "id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -18,8 +22,8 @@ CREATE TABLE "order" (
     CONSTRAINT "order_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "order_item" (
+-- CreateTable order_item
+CREATE TABLE IF NOT EXISTS "order_item" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
@@ -33,8 +37,8 @@ CREATE TABLE "order_item" (
     CONSTRAINT "order_item_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "wishlist" (
+-- CreateTable wishlist
+CREATE TABLE IF NOT EXISTS "wishlist" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
@@ -43,8 +47,8 @@ CREATE TABLE "wishlist" (
     CONSTRAINT "wishlist_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "review" (
+-- CreateTable review
+CREATE TABLE IF NOT EXISTS "review" (
     "id" TEXT NOT NULL,
     "rating" INTEGER NOT NULL,
     "content" TEXT,
@@ -58,8 +62,8 @@ CREATE TABLE "review" (
     CONSTRAINT "review_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "comment" (
+-- CreateTable comment
+CREATE TABLE IF NOT EXISTS "comment" (
     "id" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "isHidden" BOOLEAN NOT NULL DEFAULT false,
@@ -72,55 +76,67 @@ CREATE TABLE "comment" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "order_code_key" ON "order"("code");
+CREATE UNIQUE INDEX IF NOT EXISTS "order_code_key" ON "order"("code");
+CREATE INDEX IF NOT EXISTS "order_userId_createdAt_idx" ON "order"("userId", "createdAt");
+CREATE INDEX IF NOT EXISTS "order_item_orderId_idx" ON "order_item"("orderId");
+CREATE INDEX IF NOT EXISTS "order_item_productId_idx" ON "order_item"("productId");
+CREATE INDEX IF NOT EXISTS "wishlist_userId_idx" ON "wishlist"("userId");
+CREATE UNIQUE INDEX IF NOT EXISTS "wishlist_userId_productId_key" ON "wishlist"("userId", "productId");
+CREATE INDEX IF NOT EXISTS "review_productId_idx" ON "review"("productId");
+CREATE UNIQUE INDEX IF NOT EXISTS "review_userId_productId_key" ON "review"("userId", "productId");
+CREATE INDEX IF NOT EXISTS "comment_productId_createdAt_idx" ON "comment"("productId", "createdAt");
 
--- CreateIndex
-CREATE INDEX "order_userId_createdAt_idx" ON "order"("userId", "createdAt");
+-- AddForeignKey (An toàn: Bỏ qua nếu constraint đã tồn tại)
+DO $$ BEGIN
+    ALTER TABLE "order" ADD CONSTRAINT "order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateIndex
-CREATE INDEX "order_item_orderId_idx" ON "order_item"("orderId");
+DO $$ BEGIN
+    ALTER TABLE "order_item" ADD CONSTRAINT "order_item_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateIndex
-CREATE INDEX "order_item_productId_idx" ON "order_item"("productId");
+DO $$ BEGIN
+    ALTER TABLE "order_item" ADD CONSTRAINT "order_item_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateIndex
-CREATE INDEX "wishlist_userId_idx" ON "wishlist"("userId");
+DO $$ BEGIN
+    ALTER TABLE "wishlist" ADD CONSTRAINT "wishlist_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateIndex
-CREATE UNIQUE INDEX "wishlist_userId_productId_key" ON "wishlist"("userId", "productId");
+DO $$ BEGIN
+    ALTER TABLE "wishlist" ADD CONSTRAINT "wishlist_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateIndex
-CREATE INDEX "review_productId_idx" ON "review"("productId");
+DO $$ BEGIN
+    ALTER TABLE "review" ADD CONSTRAINT "review_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateIndex
-CREATE UNIQUE INDEX "review_userId_productId_key" ON "review"("userId", "productId");
+DO $$ BEGIN
+    ALTER TABLE "review" ADD CONSTRAINT "review_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateIndex
-CREATE INDEX "comment_productId_createdAt_idx" ON "comment"("productId", "createdAt");
+DO $$ BEGIN
+    ALTER TABLE "comment" ADD CONSTRAINT "comment_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- AddForeignKey
-ALTER TABLE "order" ADD CONSTRAINT "order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "order_item" ADD CONSTRAINT "order_item_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "order_item" ADD CONSTRAINT "order_item_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "wishlist" ADD CONSTRAINT "wishlist_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "wishlist" ADD CONSTRAINT "wishlist_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "review" ADD CONSTRAINT "review_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "review" ADD CONSTRAINT "review_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "comment" ADD CONSTRAINT "comment_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "comment" ADD CONSTRAINT "comment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "comment" ADD CONSTRAINT "comment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
