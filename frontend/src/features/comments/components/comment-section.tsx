@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { LoaderCircle, MessageSquare } from "lucide-react";
 import { useAuth } from "@/src/features/auth/hooks/use-auth";
+import { useInfiniteScroll } from "@/src/lib/use-infinite-scroll";
 import { CommentApiService } from "../api/comment.service";
 import { useProductComments } from "../hooks/use-product-comments";
 import { CommentForm } from "./comment-form";
@@ -20,6 +21,13 @@ export function CommentSection({ productId }: { productId: string }) {
     refresh,
     loadMore,
   } = useProductComments(productId);
+
+  const hasMore = comments.length < total;
+  const sentinelRef = useInfiniteScroll<HTMLDivElement>({
+    hasMore,
+    isLoading: isLoadingMore,
+    onLoadMore: loadMore,
+  });
 
   const handleDelete = async (comment: Comment) => {
     if (!window.confirm("Bạn có chắc chắn muốn xoá bình luận này?")) return;
@@ -80,8 +88,8 @@ export function CommentSection({ productId }: { productId: string }) {
             onDelete={handleDelete}
           />
 
-          {comments.length < total ? (
-            <div className="flex justify-center">
+          {hasMore ? (
+            <div ref={sentinelRef} className="flex flex-col items-center gap-1.5">
               <button
                 type="button"
                 onClick={loadMore}
@@ -96,6 +104,9 @@ export function CommentSection({ productId }: { productId: string }) {
                 )}
                 Xem thêm bình luận
               </button>
+              <span className="text-xs text-neutral-400">
+                Tự động tải thêm khi bạn cuộn xuống
+              </span>
             </div>
           ) : null}
         </>

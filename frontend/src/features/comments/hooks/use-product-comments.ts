@@ -52,9 +52,9 @@ export function useProductComments(productId: string) {
   const refresh = useCallback(() => loadPage(1, false), [loadPage]);
 
   const loadMore = useCallback(() => {
-    if (comments.length >= total) return;
+    if (isLoadingMore || comments.length >= total) return;
     loadPage(page + 1, true);
-  }, [comments.length, loadPage, page, total]);
+  }, [comments.length, isLoadingMore, loadPage, page, total]);
 
   return {
     comments,

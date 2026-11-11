@@ -6,6 +6,7 @@ import { CategoryGrid } from './category-grid'
 import { FlashSale } from './flash-sale'
 import { HeroSection } from './hero-section'
 import { ProductGrid } from './product-grid'
+import { LazySection } from '../../../components/lazy-section'
 import { SiteFooter } from '../../../components/site-footer'
 import { SiteHeader } from '../../../components/site-header'
 
@@ -28,8 +29,13 @@ export function ProductHomePage({
             <main>
                 <HeroSection />
                 <CategoryGrid />
-                <FlashSale onAddToCart={onAddToCart} onProductClick={onProductClick} />
-                <ProductGrid onAddToCart={onAddToCart} onProductClick={onProductClick} />
+                {/* Các khối nặng bên dưới chỉ tải khi người dùng cuộn tới gần */}
+                <LazySection minHeight={300}>
+                    <FlashSale onAddToCart={onAddToCart} onProductClick={onProductClick} />
+                </LazySection>
+                <LazySection minHeight={480}>
+                    <ProductGrid onAddToCart={onAddToCart} onProductClick={onProductClick} />
+                </LazySection>
             </main>
             <SiteFooter />
         </div>

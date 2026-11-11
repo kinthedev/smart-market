@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { LoaderCircle, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/src/features/auth/hooks/use-auth";
+import { useInfiniteScroll } from "@/src/lib/use-infinite-scroll";
 import { ReviewApiService } from "../api/review.service";
 import { useProductReviews } from "../hooks/use-product-reviews";
 import { ReviewForm } from "./review-form";
@@ -27,6 +28,13 @@ export function ReviewSection({ productId }: { productId: string }) {
   } = useProductReviews(productId);
 
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+
+  const hasMore = reviews.length < total;
+  const sentinelRef = useInfiniteScroll<HTMLDivElement>({
+    hasMore,
+    isLoading: isLoadingMore,
+    onLoadMore: loadMore,
+  });
 
   const handleDelete = async (review: Review) => {
     if (!window.confirm("Bạn có chắc chắn muốn xoá đánh giá này?")) return;
@@ -120,8 +128,8 @@ export function ReviewSection({ productId }: { productId: string }) {
             onDelete={handleDelete}
           />
 
-          {reviews.length < total ? (
-            <div className="flex justify-center">
+          {hasMore ? (
+            <div ref={sentinelRef} className="flex flex-col items-center gap-1.5">
               <button
                 type="button"
                 onClick={loadMore}
@@ -136,6 +144,9 @@ export function ReviewSection({ productId }: { productId: string }) {
                 )}
                 Xem thêm đánh giá
               </button>
+              <span className="text-xs text-neutral-400">
+                Tự động tải thêm khi bạn cuộn xuống
+              </span>
             </div>
           ) : null}
         </>

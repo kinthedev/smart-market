@@ -70,9 +70,9 @@ export function useProductReviews(productId: string) {
   }, [loadSummary, loadPage]);
 
   const loadMore = useCallback(() => {
-    if (reviews.length >= total) return;
+    if (isLoadingMore || reviews.length >= total) return;
     loadPage(page + 1, true);
-  }, [loadPage, page, reviews.length, total]);
+  }, [isLoadingMore, loadPage, page, reviews.length, total]);
 
   return {
     summary,

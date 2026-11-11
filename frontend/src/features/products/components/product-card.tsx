@@ -74,7 +74,16 @@ export function ProductCard({ product, onAddToCart, onProductClick }: ProductCar
         >
             <div className="relative aspect-square overflow-hidden bg-muted">
                 {image ? (
-                    <Image src={image} alt={product.name} fill unoptimized sizes="(min-width: 1280px) 200px, (min-width: 1024px) 20vw, (min-width: 640px) 25vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <Image
+                        src={image}
+                        alt={product.name}
+                        fill
+                        unoptimized
+                        loading="lazy"
+                        decoding="async"
+                        sizes="(min-width: 1280px) 200px, (min-width: 1024px) 20vw, (min-width: 640px) 25vw, 50vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                 ) : (
                     <div className="h-full w-full bg-gradient-to-br from-neutral-100 to-neutral-200" role="img" aria-label={`${product.name} chưa có hình ảnh`} />
                 )}

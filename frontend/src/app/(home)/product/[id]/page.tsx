@@ -20,9 +20,12 @@ import { SiteHeader } from "@/src/components/site-header";
 import { SiteFooter } from "@/src/components/site-footer";
 import { useAuth } from "@/src/features/auth/hooks/use-auth";
 import { useCart } from "@/src/features/cart/hooks/use-cart";
+import { buildCartItem } from "@/src/features/cart/utils/cart-item";
 import { WishlistButton } from "@/src/features/wishlist/components/wishlist-button";
 import { ReviewSection } from "@/src/features/reviews/components/review-section";
 import { CommentSection } from "@/src/features/comments/components/comment-section";
+import { ProductGrid } from "@/src/features/products/components/product-grid";
+import { LazySection } from "@/src/components/lazy-section";
 import type { User } from "@/src/data-seed/shop-data";
 import type {
   Product as CatalogProduct,
@@ -175,6 +178,13 @@ export default function ProductDetailPage() {
     router.push("/checkout");
   };
 
+  // Thêm nhanh sản phẩm liên quan vào giỏ (không cần chọn size/màu)
+  const handleAddRelatedToCart = (related: CatalogProduct) => {
+    if (!requireLogin()) return;
+    addItem(buildCartItem(related));
+    showNotice(`Đã thêm "${related.name}" vào giỏ hàng.`);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader user={currentUser} onLogout={() => logout()} />
@@ -268,6 +278,8 @@ export default function ProductDetailPage() {
                           alt={img.altText || `${product.name} ${index + 1}`}
                           fill
                           unoptimized
+                          loading="lazy"
+                          decoding="async"
                           sizes="64px"
                           className="object-cover"
                         />
@@ -506,6 +518,20 @@ export default function ProductDetailPage() {
                 ) : null}
               </div>
             </section>
+
+            {/* Sản phẩm liên quan cùng danh mục (lazy tải khi cuộn tới) */}
+            {(product.categoryId || product.category?.id) && (
+              <LazySection minHeight={420}>
+                <div className="-mx-4">
+                  <ProductGrid
+                    categoryId={product.categoryId ?? product.category?.id ?? undefined}
+                    excludeProductId={product.id}
+                    title="Sản phẩm cùng danh mục"
+                    onAddToCart={handleAddRelatedToCart}
+                  />
+                </div>
+              </LazySection>
+            )}
           </>
         )}
       </main>
