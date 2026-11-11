@@ -43,6 +43,7 @@ export function CheckoutView() {
   // Sổ thông tin người nhận đã lưu
   const [savedAddresses, setSavedAddresses] = React.useState<ReceiverAddress[]>([])
   const [selectedAddressId, setSelectedAddressId] = React.useState("")
+  const [addressesLoaded, setAddressesLoaded] = React.useState(false)
 
   // Phương thức thanh toán
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>("COD")
@@ -64,16 +65,21 @@ export function CheckoutView() {
     if (!authUser) {
       setSavedAddresses([])
       setSelectedAddressId("")
+      setAddressesLoaded(true)
       return
     }
 
     let mounted = true
+    setAddressesLoaded(false)
     AccountApiService.getAddresses()
       .then((data) => {
         if (mounted) setSavedAddresses(Array.isArray(data) ? data : [])
       })
       .catch(() => {
         if (mounted) setSavedAddresses([])
+      })
+      .finally(() => {
+        if (mounted) setAddressesLoaded(true)
       })
 
     return () => {
@@ -179,6 +185,27 @@ export function CheckoutView() {
           color: item.color || null,
         })),
       })
+
+      // Khách chưa có địa chỉ nào trong sổ => tự lưu địa chỉ vừa nhập cho lần mua sau.
+      if (addressesLoaded && savedAddresses.length === 0) {
+        try {
+          const createdAddress = await AccountApiService.createAddress({
+            receiverName: receiverName.trim(),
+            receiverPhone: cleanPhone,
+            provinceId: selectedProvinceId,
+            districtId: selectedDistrictId,
+            ward: selectedWard,
+            province: currentProvince?.name ?? "",
+            district: currentDistrict?.name ?? "",
+            addressDetail: specificAddress.trim(),
+            isDefault: true,
+          })
+          setSavedAddresses([createdAddress])
+          setSelectedAddressId(createdAddress.id)
+        } catch {
+          // Không chặn việc đặt hàng nếu lưu địa chỉ thất bại.
+        }
+      }
 
       // Xóa toàn bộ sản phẩm trong giỏ hàng sau khi đặt thành công
       clear()

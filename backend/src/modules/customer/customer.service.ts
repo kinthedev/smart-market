@@ -16,6 +16,93 @@ export interface CreateCustomerInput {
 
 export interface UpdateCustomerInput extends Partial<CreateCustomerInput> {}
 
+type CustomerOrderStatus =
+  | "Hoàn thành"
+  | "Đang giao"
+  | "Đã hủy"
+  | "Chờ xác nhận";
+
+const ORDER_STATUS_LABELS: Record<string, CustomerOrderStatus> = {
+  PENDING: "Chờ xác nhận",
+  CONFIRMED: "Chờ xác nhận",
+  SHIPPING: "Đang giao",
+  DELIVERED: "Hoàn thành",
+  CANCELLED: "Đã hủy",
+};
+
+type CustomerOrderRow = {
+  id: string;
+  code: string;
+  status: string;
+  total: number;
+  receiverPhone: string | null;
+  createdAt: Date;
+  _count: { items: number };
+};
+
+function formatOrderDate(date: Date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${date.getFullYear()}`;
+}
+
+/**
+ * Chuẩn hoá dữ liệu 1 khách hàng: thông tin cá nhân + thống kê mua hàng thật
+ * (tổng đơn, tổng chi tiêu chỉ tính đơn không bị huỷ, lịch sử đơn gần nhất).
+ */
+function mapCustomer(user: any, orders: CustomerOrderRow[]) {
+  const sortedOrders = [...orders].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  );
+
+  const totalOrders = sortedOrders.length;
+  const totalSpent = sortedOrders
+    .filter((order) => order.status !== "CANCELLED")
+    .reduce((sum, order) => sum + order.total, 0);
+
+  const defaultAddress = user.shippingAddresses?.[0] ?? null;
+  const latestOrder = sortedOrders[0] ?? null;
+
+  return {
+    id: user.id,
+    code: `KH-${user.id.slice(0, 6).toUpperCase()}`,
+    name: user.name,
+    email: user.email,
+    phone: user.phone || defaultAddress?.receiverPhone || latestOrder?.receiverPhone || "",
+    avatar: user.image || undefined,
+    registeredAt: user.createdAt.toISOString().split("T")[0],
+    status: (user.status as "Hoạt động" | "Bị khóa") || "Hoạt động",
+    totalOrders,
+    totalSpent,
+    gender: (user.gender as "Nam" | "Nữ" | "Khác") || "Nam",
+    dateOfBirth: user.dateOfBirth || "",
+    province: user.province || defaultAddress?.province || "",
+    district: user.district || defaultAddress?.district || "",
+    ward: user.ward || defaultAddress?.ward || "",
+    addressDetail: user.addressDetail || defaultAddress?.addressDetail || "",
+    orderHistory: sortedOrders.map((order) => ({
+      id: order.id,
+      orderCode: order.code,
+      date: formatOrderDate(order.createdAt),
+      totalAmount: order.total,
+      paymentMethod: "COD",
+      status: ORDER_STATUS_LABELS[order.status] ?? "Chờ xác nhận",
+      itemCount: order._count.items,
+    })),
+  };
+}
+
+const customerOrderSelect = {
+  id: true,
+  userId: true,
+  code: true,
+  status: true,
+  total: true,
+  receiverPhone: true,
+  createdAt: true,
+  _count: { select: { items: true } },
+} as const;
+
 export class CustomerService {
   static async getCustomers(query?: { search?: string; status?: string }) {
     const where: any = {};
@@ -38,54 +125,58 @@ export class CustomerService {
     const users = await prisma.user.findMany({
       where,
       orderBy: { createdAt: "desc" },
+      include: {
+        shippingAddresses: {
+          where: { isDefault: true },
+          take: 1,
+        },
+      },
     });
 
-    return users.map((u, idx) => ({
-      id: u.id,
-      code: `KH-${String(idx + 1).padStart(3, "0")}`,
-      name: u.name,
-      email: u.email,
-      phone: u.phone || "",
-      avatar: u.image || undefined,
-      registeredAt: u.createdAt.toISOString().split("T")[0],
-      status: (u.status as "Hoạt động" | "Bị khóa") || "Hoạt động",
-      totalOrders: 0,
-      totalSpent: 0,
-      gender: (u.gender as "Nam" | "Nữ" | "Khác") || "Nam",
-      dateOfBirth: u.dateOfBirth || "",
-      province: u.province || "",
-      district: u.district || "",
-      ward: u.ward || "",
-      addressDetail: u.addressDetail || "",
-      orderHistory: [],
-    }));
+    if (!users.length) return [];
+
+    const userIds = users.map((user) => user.id);
+    const orders = await prisma.order.findMany({
+      where: { userId: { in: userIds } },
+      orderBy: { createdAt: "desc" },
+      select: customerOrderSelect,
+    });
+
+    const ordersByUser = new Map<string, CustomerOrderRow[]>();
+    for (const order of orders) {
+      const current = ordersByUser.get(order.userId as string) ?? [];
+      current.push(order as CustomerOrderRow);
+      ordersByUser.set(order.userId as string, current);
+    }
+
+    return users
+      .map((user) => mapCustomer(user, ordersByUser.get(user.id) ?? []))
+      .map((customer, idx) => ({
+        ...customer,
+        // Giữ mã khách hàng dạng tuần tự như trước để dễ đọc
+        code: `KH-${String(idx + 1).padStart(3, "0")}`,
+      }));
   }
 
   static async getCustomerById(id: string) {
     const user = await prisma.user.findUnique({
       where: { id },
+      include: {
+        shippingAddresses: {
+          where: { isDefault: true },
+          take: 1,
+        },
+      },
     });
     if (!user) return null;
 
-    return {
-      id: user.id,
-      code: `KH-${user.id.slice(0, 4).toUpperCase()}`,
-      name: user.name,
-      email: user.email,
-      phone: user.phone || "",
-      avatar: user.image || undefined,
-      registeredAt: user.createdAt.toISOString().split("T")[0],
-      status: (user.status as "Hoạt động" | "Bị khóa") || "Hoạt động",
-      totalOrders: 0,
-      totalSpent: 0,
-      gender: (user.gender as "Nam" | "Nữ" | "Khác") || "Nam",
-      dateOfBirth: user.dateOfBirth || "",
-      province: user.province || "",
-      district: user.district || "",
-      ward: user.ward || "",
-      addressDetail: user.addressDetail || "",
-      orderHistory: [],
-    };
+    const orders = await prisma.order.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: "desc" },
+      select: customerOrderSelect,
+    });
+
+    return mapCustomer(user, orders as CustomerOrderRow[]);
   }
 
   static async createCustomer(data: CreateCustomerInput) {
@@ -113,29 +204,11 @@ export class CustomerService {
       },
     });
 
-    return {
-      id: newUser.id,
-      code: `KH-${newUser.id.slice(0, 4).toUpperCase()}`,
-      name: newUser.name,
-      email: newUser.email,
-      phone: newUser.phone || "",
-      avatar: newUser.image || undefined,
-      registeredAt: newUser.createdAt.toISOString().split("T")[0],
-      status: (newUser.status as "Hoạt động" | "Bị khóa") || "Hoạt động",
-      totalOrders: 0,
-      totalSpent: 0,
-      gender: (newUser.gender as "Nam" | "Nữ" | "Khác") || "Nam",
-      dateOfBirth: newUser.dateOfBirth || "",
-      province: newUser.province || "",
-      district: newUser.district || "",
-      ward: newUser.ward || "",
-      addressDetail: newUser.addressDetail || "",
-      orderHistory: [],
-    };
+    return CustomerService.getCustomerById(newUser.id);
   }
 
   static async updateCustomer(id: string, data: UpdateCustomerInput) {
-    const updated = await prisma.user.update({
+    await prisma.user.update({
       where: { id },
       data: {
         name: data.name,
@@ -151,25 +224,7 @@ export class CustomerService {
       },
     });
 
-    return {
-      id: updated.id,
-      code: `KH-${updated.id.slice(0, 4).toUpperCase()}`,
-      name: updated.name,
-      email: updated.email,
-      phone: updated.phone || "",
-      avatar: updated.image || undefined,
-      registeredAt: updated.createdAt.toISOString().split("T")[0],
-      status: (updated.status as "Hoạt động" | "Bị khóa") || "Hoạt động",
-      totalOrders: 0,
-      totalSpent: 0,
-      gender: (updated.gender as "Nam" | "Nữ" | "Khác") || "Nam",
-      dateOfBirth: updated.dateOfBirth || "",
-      province: updated.province || "",
-      district: updated.district || "",
-      ward: updated.ward || "",
-      addressDetail: updated.addressDetail || "",
-      orderHistory: [],
-    };
+    return CustomerService.getCustomerById(id);
   }
 
   static async deleteCustomer(id: string) {
@@ -186,9 +241,11 @@ export class CustomerService {
     if (!current) throw new Error("Không tìm thấy khách hàng");
 
     const nextStatus = current.status === "Hoạt động" ? "Bị khóa" : "Hoạt động";
-    return prisma.user.update({
+    await prisma.user.update({
       where: { id },
       data: { status: nextStatus },
     });
+
+    return CustomerService.getCustomerById(id);
   }
 }

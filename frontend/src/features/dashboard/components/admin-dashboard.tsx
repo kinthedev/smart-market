@@ -116,6 +116,32 @@ export function AdminDashboard() {
     const [thongBao, setThongBao] = useState('')
     const [moTaiKhoanMenu, setMoTaiKhoanMenu] = useState(false)
 
+    // Đồng bộ trạng thái menu khi chuyển đổi giữa desktop và mobile
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth <= 700) {
+                // Trên mobile luôn hiển thị menu đầy đủ (không thu gọn)
+                setThuGon(false)
+            } else {
+                setMoMenu(false)
+            }
+        }
+
+        handleResize()
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
+    // Khoá cuộn nền khi mở menu trên mobile
+    useEffect(() => {
+        if (!moMenu) return
+        const previous = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.body.style.overflow = previous
+        }
+    }, [moMenu])
+
     // Tải dữ liệu thật cho tab Tổng quan theo khoảng thời gian đã chọn
     useEffect(() => {
         if (trang !== 'Tổng quan') return

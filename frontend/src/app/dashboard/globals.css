@@ -32,6 +32,7 @@ button {
 	min-height: 100vh;
 	display: flex;
 	background: var(--nen);
+	overflow-x: hidden;
 }
 .thanh-ben {
 	width: 260px;
@@ -182,6 +183,7 @@ button {
 .khu-noi-dung {
 	min-width: 0;
 	flex: 1;
+	width: 100%;
 }
 .thanh-tren {
 	height: 80px;
@@ -191,6 +193,8 @@ button {
 	align-items: center;
 	padding: 0 31px;
 	gap: 26px;
+	position: relative;
+	z-index: 10;
 }
 .nut-menu {
 	display: none;
@@ -204,6 +208,8 @@ button {
 	gap: 7px;
 	font-size: 13px;
 	white-space: nowrap;
+	min-width: 0;
+	overflow: hidden;
 }
 .breadcrumb span {
 	color: #9da0ae;
@@ -219,6 +225,7 @@ button {
 	padding: 0 12px;
 	max-width: 320px;
 	flex: 1;
+	min-width: 0;
 	margin-left: 20px;
 	color: #a4a7b3;
 }
@@ -227,6 +234,7 @@ button {
 	outline: 0;
 	background: transparent;
 	width: 100%;
+	min-width: 0;
 	font-size: 12px;
 }
 .thanh-phai {
@@ -234,6 +242,7 @@ button {
 	display: flex;
 	align-items: center;
 	gap: 22px;
+	flex-shrink: 0;
 }
 .nut-bieu-tuong {
 	border: 0;
@@ -334,6 +343,12 @@ button {
 	gap: 13px;
 	margin-bottom: 21px;
 }
+.luoi-the > *,
+.luoi-bieu-do > *,
+.luoi-duoi > *,
+.luoi-the-nho > * {
+	min-width: 0;
+}
 .the-thong-ke {
 	background: #fff;
 	border: 1px solid var(--vien);
@@ -397,6 +412,7 @@ button {
 	display: block;
 	margin-top: 8px;
 	letter-spacing: -0.5px;
+	overflow-wrap: anywhere;
 }
 .luoi-bieu-do {
 	display: grid;
@@ -409,11 +425,13 @@ button {
 	border: 1px solid var(--vien);
 	border-radius: 9px;
 	padding: 19px;
+	min-width: 0;
 }
 .tieu-de-the {
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-start;
+	gap: 8px;
 }
 .tieu-de-the h2,
 .tieu-de-bang h2 {
@@ -427,6 +445,7 @@ button {
 }
 .bieu-do {
 	min-height: 275px;
+	min-width: 0;
 }
 .chu-thich {
 	display: flex;
@@ -724,6 +743,8 @@ button {
 }
 .bang-cuon {
 	overflow: auto;
+	max-width: 100%;
+	-webkit-overflow-scrolling: touch;
 }
 table {
 	border-collapse: collapse;
@@ -932,6 +953,11 @@ td strong {
 		width: 254px;
 		box-shadow: 10px 0 30px #20233a22;
 	}
+	@supports (height: 100dvh) {
+		.thanh-ben {
+			height: 100dvh;
+		}
+	}
 	.thanh-ben.thu-gon {
 		width: 254px;
 	}
@@ -977,11 +1003,22 @@ td strong {
 	.tim-kiem {
 		order: 5;
 		position: absolute;
-		top: 71px;
-		left: 15px;
-		right: 15px;
+		top: 100%;
+		left: 0;
+		right: 0;
 		max-width: none;
 		margin: 0;
+		height: 42px;
+		padding: 0 15px;
+		border: 0;
+		border-bottom: 1px solid var(--vien);
+		border-radius: 0;
+		background: #fff;
+		box-shadow: 0 8px 16px -12px #20233a55;
+	}
+	.tim-kiem input {
+		/* Tránh iOS tự zoom trang khi focus ô tìm kiếm */
+		font-size: 16px;
 	}
 	.thanh-phai {
 		gap: 9px;
@@ -992,6 +1029,13 @@ td strong {
 	}
 	.noi-dung-chinh {
 		padding: 65px 15px 30px;
+	}
+	/* Bảng dữ liệu cuộn ngang trong khung, không làm tràn cả trang */
+	table {
+		min-width: 560px;
+	}
+	.nut-thu-gon {
+		display: none;
 	}
 	.tieu-de-trang {
 		align-items: flex-start;

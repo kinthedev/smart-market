@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Flame, Heart, ShieldCheck, ShoppingCart, Star, Zap } from 'lucide-react'
+import { Flame, Heart, ShieldCheck, Star, Zap } from 'lucide-react'
 import { cn } from 'cn'
 import { Price } from '@/src//features/products/components/price'
 import { WishlistButton } from '@/src/features/wishlist/components/wishlist-button'
@@ -95,16 +95,6 @@ export function ProductCard({ product, onAddToCart, onProductClick }: ProductCar
                 {discount > 0 && <span className="absolute right-0 top-11 rounded-bl-sm bg-orange-50 px-1.5 py-1 text-xs font-semibold leading-tight text-primary">-{discount}%</span>}
                 {isNew && <span className="absolute bottom-2 left-2 rounded-sm bg-neutral-900/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white">Mới</span>}
                 {catalogProduct && <WishlistButton productId={product.id} />}
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        onAddToCart?.(product)
-                    }}
-                    className="absolute inset-x-2 bottom-2 flex h-8 translate-y-2 items-center justify-center gap-1 rounded-sm bg-primary/95 text-xs font-bold text-white opacity-0 shadow transition-all duration-200 hover:bg-primary group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
-                >
-                    <ShoppingCart className="size-3.5" aria-hidden="true" /> Thêm vào giỏ
-                </button>
             </div>
 
             <div className="flex flex-1 flex-col gap-0.5 p-2.5">
