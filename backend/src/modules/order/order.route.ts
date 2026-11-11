@@ -15,6 +15,7 @@ router.post(
 router.get("/orders/my", authenticate, OrderController.getMyOrders)
 router.get("/orders", authenticate, OrderController.getAllOrders)
 router.patch("/orders/:id/status", authenticate, OrderController.updateStatus)
+router.patch("/orders/:id/cancel", authenticate, OrderController.cancelOrder)
 router.get("/orders/:id", authenticate, OrderController.getOrderById)
 
 export { router as orderRouter }

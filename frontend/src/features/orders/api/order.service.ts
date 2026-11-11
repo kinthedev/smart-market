@@ -95,4 +95,18 @@ export class OrderApiService {
     );
     return parseResponse<Order>(res);
   }
+
+  /**
+   * Khách hàng tự hủy đơn hàng
+   */
+  static async cancelOrder(id: string): Promise<Order> {
+    const res = await fetch(
+      `${BACKEND_URL}/api/v1/orders/${encodeURIComponent(id)}/cancel`,
+      {
+        method: "PATCH",
+        credentials: "include",
+      }
+    );
+    return parseResponse<Order>(res);
+  }
 }

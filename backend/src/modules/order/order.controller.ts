@@ -75,4 +75,35 @@ export class OrderController {
 			return res.status(400).json({ success: false, message: error.message })
 		}
 	}
+
+	static async cancelOrder(req: Request, res: Response) {
+		try {
+			const orderId = req.params.id as string
+			const order = await OrderService.getOrderById(orderId)
+
+			if (!order) {
+				return res
+					.status(404)
+					.json({ success: false, message: "Không tìm thấy đơn hàng." })
+			}
+
+			if (order.userId !== req.user.id) {
+				return res
+					.status(403)
+					.json({ success: false, message: "Bạn không có quyền hủy đơn hàng này." })
+			}
+
+			if (order.status !== "PENDING" && order.status !== "CONFIRMED") {
+				return res.status(400).json({
+					success: false,
+					message: "Chỉ có thể hủy đơn hàng đang ở trạng thái Chờ xử lý hoặc Đã xác nhận.",
+				})
+			}
+
+			const updatedOrder = await OrderService.updateStatus(orderId, "CANCELLED")
+			return res.status(200).json({ success: true, data: updatedOrder })
+		} catch (error: any) {
+			return res.status(400).json({ success: false, message: error.message })
+		}
+	}
 }

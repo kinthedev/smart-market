@@ -80,6 +80,8 @@ export function MyOrdersView() {
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState("")
   const [activeFilter, setActiveFilter] = useState<"ALL" | OrderStatus>("ALL")
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [cancelError, setCancelError] = useState<string | null>(null)
 
   const currentUser: User | null = useMemo(() => {
     if (!authUser) return null
@@ -122,6 +124,24 @@ export function MyOrdersView() {
       mounted = false
     }
   }, [authUser, isAuthLoading])
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return
+
+    setCancellingId(orderId)
+    setCancelError(null)
+
+    try {
+      const updated = await OrderApiService.cancelOrder(orderId)
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? updated : o))
+      )
+    } catch (error: any) {
+      alert(error?.message || "Không thể hủy đơn hàng.")
+    } finally {
+      setCancellingId(null)
+    }
+  }
 
   const filteredOrders = useMemo(() => {
     if (activeFilter === "ALL") return orders
@@ -343,9 +363,24 @@ export function MyOrdersView() {
                       </p>
                     )}
                     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 pt-2">
-                      <span className="text-xs text-slate-500">
-                        Tổng thanh toán
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500">
+                          Tổng thanh toán
+                        </span>
+                        {(order.status === "PENDING" || order.status === "CONFIRMED") && (
+                          <button
+                            type="button"
+                            disabled={cancellingId === order.id}
+                            onClick={() => handleCancelOrder(order.id)}
+                            className="inline-flex items-center gap-1 rounded-sm border border-rose-300 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                          >
+                            {cancellingId === order.id && (
+                              <Loader2 className="size-3 animate-spin" />
+                            )}
+                            Hủy đơn hàng
+                          </button>
+                        )}
+                      </div>
                       <strong className="text-base font-extrabold text-[#ee4d2d]">
                         {formatPrice(order.total)}đ
                       </strong>
