@@ -15,8 +15,40 @@ import { CustomerManager } from '@/src/features/customers/components/customer-ma
 import { ReviewManager } from '@/src/features/reviews/components/review-manager'
 import { AdminOrderManager } from '@/src/features/orders/components/admin-order-manager'
 import { InventoryManager } from '@/src/features/inventory/components/inventory-manager'
+import { DashboardApiService } from '../api/dashboard.service'
+import type {
+    DashboardOverview,
+    DashboardRange,
+    DashboardRevenuePoint,
+    DashboardStatusCount,
+} from '../types/dashboard.types'
 
 type Trang = 'Tổng quan' | 'Đơn hàng' | 'Sản phẩm' | 'Khách hàng' | 'Kho hàng' | 'Đánh giá'
+
+const ORDER_STATUS_LABEL: Record<string, string> = {
+    PENDING: 'Chờ xác nhận',
+    CONFIRMED: 'Đã xác nhận',
+    SHIPPING: 'Đang giao',
+    DELIVERED: 'Đã giao',
+    CANCELLED: 'Đã hủy',
+}
+
+function formatCurrency(value: number) {
+    return `${new Intl.NumberFormat('vi-VN').format(Math.round(value))} ₫`
+}
+
+function formatShortDateTime(value: string) {
+    try {
+        return new Date(value).toLocaleString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        })
+    } catch {
+        return value
+    }
+}
 
 type SanPham = { ten: string; ma: string; daBan: number; doanhThu: string; mau: string; anh: string }
 
@@ -72,13 +104,45 @@ export function AdminDashboard() {
             window.history.replaceState(null, '', tabToHash[t])
         }
     }
+
     const [moMenu, setMoMenu] = useState(false)
     const [thuGon, setThuGon] = useState(false)
     const [timKiem, setTimKiem] = useState('')
-    const [boLoc, setBoLoc] = useState('30 ngày qua')
+    const [boLoc, setBoLoc] = useState<DashboardRange>('30d')
+    const [overview, setOverview] = useState<DashboardOverview | null>(null)
+    const [isOverviewLoading, setIsOverviewLoading] = useState(true)
+    const [overviewError, setOverviewError] = useState('')
     const [sanPhamList, setSanPhamList] = useState<SanPham[]>(sanPhamBanDau)
     const [thongBao, setThongBao] = useState('')
     const [moTaiKhoanMenu, setMoTaiKhoanMenu] = useState(false)
+
+    // Tải dữ liệu thật cho tab Tổng quan theo khoảng thời gian đã chọn
+    useEffect(() => {
+        if (trang !== 'Tổng quan') return
+
+        let mounted = true
+        setIsOverviewLoading(true)
+        setOverviewError('')
+
+        DashboardApiService.getOverview(boLoc)
+            .then((data) => {
+                if (mounted) setOverview(data)
+            })
+            .catch((error: unknown) => {
+                if (mounted) {
+                    setOverviewError(
+                        error instanceof Error ? error.message : 'Không thể tải dữ liệu tổng quan.'
+                    )
+                }
+            })
+            .finally(() => {
+                if (mounted) setIsOverviewLoading(false)
+            })
+
+        return () => {
+            mounted = false
+        }
+    }, [trang, boLoc])
 
     const adminName = authUser?.name || 'Admin SmartMarket'
     const adminEmail = authUser?.email || ''
@@ -89,6 +153,18 @@ export function AdminDashboard() {
         .slice(-2)
         .join('')
         .toUpperCase() || 'AD'
+
+    const stats = overview?.stats ?? {
+        revenue: 0,
+        orders: 0,
+        productsSold: 0,
+        customers: 0,
+        pendingOrders: 0,
+        lowStock: 0,
+        totalProducts: 0,
+    }
+    const topProducts = overview?.topProducts ?? []
+    const recentOrders = overview?.recentOrders ?? []
 
     const hienThongBao = (noiDung: string) => { setThongBao(noiDung); window.setTimeout(() => setThongBao(''), 2600) }
 
@@ -251,29 +327,38 @@ export function AdminDashboard() {
                             </div>
                             <div className="bo-loc-thoi-gian">
                                 <SlidersHorizontal size={16} />
-                                <select value={boLoc} onChange={(e) => setBoLoc(e.target.value)}>
-                                    <option>Hôm nay</option>
-                                    <option>7 ngày qua</option>
-                                    <option>30 ngày qua</option>
-                                    <option>Tháng này</option>
-                                    <option>Năm nay</option>
+                                <select
+                                    value={boLoc}
+                                    onChange={(e) => setBoLoc(e.target.value as DashboardRange)}
+                                >
+                                    <option value="today">Hôm nay</option>
+                                    <option value="7d">7 ngày qua</option>
+                                    <option value="30d">30 ngày qua</option>
+                                    <option value="month">Tháng này</option>
+                                    <option value="year">Năm nay</option>
                                 </select>
                                 <ChevronDown size={15} />
                             </div>
                         </div>
 
+                        {overviewError ? (
+                            <div className="the-noi-dung" style={{ padding: '14px 16px', marginBottom: '12px', color: '#dc2626', fontSize: '13px' }}>
+                                {overviewError}
+                            </div>
+                        ) : null}
+
                         <div className="luoi-the">
-                            <TheThongKe icon={<DollarSign />} tieuDe="Tổng doanh thu" soLieu="0 ₫" tang="0%" mau="xanh" />
-                            <TheThongKe icon={<ShoppingCart />} tieuDe="Tổng số đơn hàng" soLieu="0" tang="0%" mau="tim" />
-                            <TheThongKe icon={<Package />} tieuDe="Sản phẩm đã bán" soLieu="0" tang="0%" mau="cam" />
-                            <TheThongKe icon={<Users />} tieuDe="Tổng khách hàng" soLieu="0" tang="0%" mau="xanh-la" />
-                            <TheThongKe icon={<ClipboardList />} tieuDe="Đơn chờ xử lý" soLieu="0" tang="0%" mau="do" />
-                            <TheThongKe icon={<Warehouse />} tieuDe="Sắp hết hàng" soLieu="0" tang="0" mau="vang" />
+                            <TheThongKe icon={<DollarSign />} tieuDe="Tổng doanh thu" soLieu={isOverviewLoading ? '—' : formatCurrency(stats.revenue)} tang="Trong kỳ" mau="xanh" />
+                            <TheThongKe icon={<ShoppingCart />} tieuDe="Tổng số đơn hàng" soLieu={isOverviewLoading ? '—' : String(stats.orders)} tang="Trong kỳ" mau="tim" />
+                            <TheThongKe icon={<Package />} tieuDe="Sản phẩm đã bán" soLieu={isOverviewLoading ? '—' : String(stats.productsSold)} tang="Trong kỳ" mau="cam" />
+                            <TheThongKe icon={<Users />} tieuDe="Tổng khách hàng" soLieu={isOverviewLoading ? '—' : String(stats.customers)} tang="Tích lũy" mau="xanh-la" />
+                            <TheThongKe icon={<ClipboardList />} tieuDe="Đơn chờ xử lý" soLieu={isOverviewLoading ? '—' : String(stats.pendingOrders)} tang="Cần xử lý" mau="do" />
+                            <TheThongKe icon={<Warehouse />} tieuDe="Sắp hết hàng" soLieu={isOverviewLoading ? '—' : String(stats.lowStock)} tang="≤ 5 tồn" mau="vang" />
                         </div>
 
                         <div className="luoi-bieu-do">
-                            <BieuDoDoanhThu />
-                            <BieuDoDonHang />
+                            <BieuDoDoanhThu points={overview?.revenueSeries ?? []} isLoading={isOverviewLoading} />
+                            <BieuDoDonHang data={overview?.ordersByStatus ?? []} isLoading={isOverviewLoading} />
                         </div>
 
                         <div className="luoi-duoi">
@@ -281,32 +366,76 @@ export function AdminDashboard() {
                                 <div className="tieu-de-the">
                                     <div>
                                         <h2>Sản phẩm bán chạy</h2>
-                                        <p>Hiệu suất sản phẩm trong 30 ngày qua</p>
+                                        <p>Xếp hạng theo số lượng bán trong khoảng thời gian đã chọn</p>
                                     </div>
                                     <button className="nut-xem-tat-ca" onClick={() => setTrang('Sản phẩm')}>
                                         Xem tất cả <ChevronRight size={15} />
                                     </button>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', color: '#94a3b8', textAlign: 'center' }}>
-                                    <Inbox size={36} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
-                                    <p style={{ fontSize: '13px', fontWeight: 500, margin: 0, color: '#64748b' }}>Chưa có sản phẩm phát sinh doanh thu</p>
-                                </div>
+
+                                {topProducts.length === 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', color: '#94a3b8', textAlign: 'center' }}>
+                                        <Inbox size={36} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
+                                        <p style={{ fontSize: '13px', fontWeight: 500, margin: 0, color: '#64748b' }}>Chưa có sản phẩm phát sinh doanh thu</p>
+                                    </div>
+                                ) : (
+                                    <div className="bang-cuon">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Sản phẩm</th>
+                                                    <th>Đã bán</th>
+                                                    <th>Doanh thu</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {topProducts.map((product) => (
+                                                    <tr key={product.productId}>
+                                                        <td><strong>{product.name}</strong></td>
+                                                        <td>{product.sold}</td>
+                                                        <td><strong>{formatCurrency(product.revenue)}</strong></td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </section>
 
                             <section className="the-noi-dung hoat-dong">
                                 <div className="tieu-de-the">
                                     <div>
-                                        <h2>Hoạt động gần đây</h2>
+                                        <h2>Đơn hàng gần đây</h2>
                                         <p>Cập nhật mới nhất từ cửa hàng</p>
                                     </div>
-                                    <button className="nut-ba-cham" aria-label="Tùy chọn">
-                                        <MoreHorizontal size={19} />
+                                    <button className="nut-xem-tat-ca" onClick={() => setTrang('Đơn hàng')}>
+                                        Xem tất cả <ChevronRight size={15} />
                                     </button>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', color: '#94a3b8', textAlign: 'center' }}>
-                                    <Inbox size={36} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
-                                    <p style={{ fontSize: '13px', fontWeight: 500, margin: 0, color: '#64748b' }}>Chưa có hoạt động mới nào</p>
-                                </div>
+
+                                {recentOrders.length === 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', color: '#94a3b8', textAlign: 'center' }}>
+                                        <Inbox size={36} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
+                                        <p style={{ fontSize: '13px', fontWeight: 500, margin: 0, color: '#64748b' }}>Chưa có hoạt động mới nào</p>
+                                    </div>
+                                ) : (
+                                    <ul style={{ listStyle: 'none', margin: 0, padding: '4px 16px 12px' }}>
+                                        {recentOrders.map((order) => (
+                                            <li key={order.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <strong style={{ display: 'block', fontSize: '13px', color: '#0f172a' }}>{order.code}</strong>
+                                                    <span style={{ fontSize: '11px', color: '#64748b' }}>
+                                                        {order.receiverName} · {formatShortDateTime(order.createdAt)}
+                                                    </span>
+                                                </div>
+                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                    <strong style={{ display: 'block', fontSize: '12px', color: '#ee4d2d' }}>{formatCurrency(order.total)}</strong>
+                                                    <span style={{ fontSize: '11px', color: '#64748b' }}>{ORDER_STATUS_LABEL[order.status] ?? order.status}</span>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </section>
                         </div>
                     </>
@@ -348,7 +477,10 @@ function TheThongKe({ icon, tieuDe, soLieu, tang, mau }: { icon: React.ReactNode
     )
 }
 
-function BieuDoDoanhThu() {
+function BieuDoDoanhThu({ points, isLoading }: { points: DashboardRevenuePoint[]; isLoading: boolean }) {
+    const maxRevenue = points.reduce((max, point) => Math.max(max, point.revenue), 0)
+    const hasData = points.some((point) => point.revenue > 0)
+
     return (
         <section className="the-noi-dung bieu-do doanh-thu-chart">
             <div className="tieu-de-the">
@@ -356,30 +488,98 @@ function BieuDoDoanhThu() {
                     <h2>Doanh thu</h2>
                     <p>Doanh thu theo thời gian</p>
                 </div>
-                <button className="bo-loc-nho">30 ngày qua <ChevronDown size={14} /></button>
+                <span className="bo-loc-nho">Đơn không bị huỷ <ChevronDown size={14} /></span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '180px', color: '#94a3b8' }}>
-                <Inbox size={36} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
-                <p style={{ fontSize: '13px', margin: 0, color: '#64748b' }}>Chưa có dữ liệu doanh thu</p>
-            </div>
+
+            {isLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '180px', color: '#94a3b8', fontSize: '13px' }}>
+                    Đang tải dữ liệu doanh thu...
+                </div>
+            ) : !hasData ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '180px', color: '#94a3b8' }}>
+                    <Inbox size={36} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
+                    <p style={{ fontSize: '13px', margin: 0, color: '#64748b' }}>Chưa có dữ liệu doanh thu</p>
+                </div>
+            ) : (
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '190px', padding: '10px 4px 0', overflowX: 'auto' }}>
+                    {points.map((point) => (
+                        <div
+                            key={point.label}
+                            title={`${point.label}: ${formatCurrency(point.revenue)} (${point.orders} đơn)`}
+                            style={{ flex: '1 0 26px', minWidth: '26px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}
+                        >
+                            <div
+                                style={{
+                                    width: '100%',
+                                    height: `${Math.max(4, (point.revenue / maxRevenue) * 145)}px`,
+                                    background: 'linear-gradient(to top, #ee4d2d, #f97316)',
+                                    borderRadius: '3px 3px 0 0',
+                                }}
+                            />
+                            <span style={{ fontSize: '10px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{point.label}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
         </section>
     )
 }
 
-function BieuDoDonHang() {
+const STATUS_BAR_COLORS: Record<string, string> = {
+    PENDING: '#f59e0b',
+    CONFIRMED: '#3b82f6',
+    SHIPPING: '#6366f1',
+    DELIVERED: '#10b981',
+    CANCELLED: '#f43f5e',
+}
+
+function BieuDoDonHang({ data, isLoading }: { data: DashboardStatusCount[]; isLoading: boolean }) {
+    const total = data.reduce((sum, item) => sum + item.count, 0)
+
     return (
         <section className="the-noi-dung bieu-do don-hang-chart">
             <div className="tieu-de-the">
                 <div>
                     <h2>Đơn hàng</h2>
-                    <p>Phân bổ theo trạng thái</p>
+                    <p>Phân bổ theo trạng thái ({total} đơn)</p>
                 </div>
-                <button className="nut-ba-cham" aria-label="Tùy chọn"><MoreHorizontal size={19} /></button>
+                <span className="nut-ba-cham" aria-hidden="true"><MoreHorizontal size={19} /></span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '180px', color: '#94a3b8' }}>
-                <Inbox size={36} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
-                <p style={{ fontSize: '13px', margin: 0, color: '#64748b' }}>Chưa có đơn hàng nào</p>
-            </div>
+
+            {isLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '180px', color: '#94a3b8', fontSize: '13px' }}>
+                    Đang tải dữ liệu đơn hàng...
+                </div>
+            ) : data.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '180px', color: '#94a3b8' }}>
+                    <Inbox size={36} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
+                    <p style={{ fontSize: '13px', margin: 0, color: '#64748b' }}>Chưa có đơn hàng nào</p>
+                </div>
+            ) : (
+                <ul style={{ listStyle: 'none', margin: 0, padding: '10px 4px 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {data.map((item) => {
+                        const percent = total > 0 ? Math.round((item.count / total) * 100) : 0
+                        return (
+                            <li key={item.status}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', fontSize: '12px', color: '#475569' }}>
+                                    <span>{item.label}</span>
+                                    <strong>{item.count} ({percent}%)</strong>
+                                </div>
+                                <div style={{ height: '8px', borderRadius: '999px', background: '#f1f5f9', overflow: 'hidden' }}>
+                                    <div
+                                        style={{
+                                            width: `${percent}%`,
+                                            height: '100%',
+                                            background: STATUS_BAR_COLORS[item.status] ?? '#94a3b8',
+                                            borderRadius: '999px',
+                                        }}
+                                    />
+                                </div>
+                            </li>
+                        )
+                    })}
+                </ul>
+            )}
         </section>
     )
 }

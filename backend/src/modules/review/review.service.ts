@@ -64,7 +64,7 @@ export class ReviewService {
 	}
 
 	static async getSummary(productId: string, userId?: string) {
-		const [aggregate, groups, myReview, commentCount] = await Promise.all([
+		const [aggregate, groups, myReview] = await Promise.all([
 			prisma.review.aggregate({
 				where: { productId, isHidden: false },
 				_avg: { rating: true },
@@ -81,7 +81,6 @@ export class ReviewService {
 						include: { user: { select: userSelect } },
 					})
 				: Promise.resolve(null),
-			prisma.comment.count({ where: { productId, isHidden: false } }),
 		])
 
 		const histogram: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
@@ -94,7 +93,6 @@ export class ReviewService {
 		return {
 			ratingAvg: Number((aggregate._avg.rating ?? 0).toFixed(1)),
 			reviewCount: aggregate._count._all,
-			commentCount,
 			histogram,
 			purchased,
 			canReview: purchased && !myReview,

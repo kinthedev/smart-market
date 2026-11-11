@@ -19,60 +19,12 @@ import { OrderApiService } from "../api/order.service"
 import type { Order, OrderStatus } from "../types/order.types"
 import { formatPrice } from "@/src/data-seed/shop-data"
 import type { User } from "@/src/data-seed/shop-data"
-
-const STATUS_META: Record<
-  OrderStatus,
-  { label: string; className: string; dot: string }
-> = {
-  PENDING: {
-    label: "Chờ xác nhận",
-    className: "bg-amber-50 text-amber-700 ring-amber-200",
-    dot: "bg-amber-500",
-  },
-  CONFIRMED: {
-    label: "Đã xác nhận",
-    className: "bg-blue-50 text-blue-700 ring-blue-200",
-    dot: "bg-blue-500",
-  },
-  SHIPPING: {
-    label: "Đang giao hàng",
-    className: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-    dot: "bg-indigo-500",
-  },
-  DELIVERED: {
-    label: "Đã giao",
-    className: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    dot: "bg-emerald-500",
-  },
-  CANCELLED: {
-    label: "Đã hủy",
-    className: "bg-rose-50 text-rose-700 ring-rose-200",
-    dot: "bg-rose-500",
-  },
-}
-
-const FILTERS: Array<{ value: "ALL" | OrderStatus; label: string }> = [
-  { value: "ALL", label: "Tất cả" },
-  { value: "PENDING", label: "Chờ xác nhận" },
-  { value: "CONFIRMED", label: "Đã xác nhận" },
-  { value: "SHIPPING", label: "Đang giao" },
-  { value: "DELIVERED", label: "Đã giao" },
-  { value: "CANCELLED", label: "Đã hủy" },
-]
-
-function formatDateTime(value: string) {
-  try {
-    return new Date(value).toLocaleString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  } catch {
-    return value
-  }
-}
+import { CustomerOrderDetailModal } from "./customer-order-detail-modal"
+import {
+  formatOrderDateTime,
+  ORDER_STATUS_FILTERS as FILTERS,
+  ORDER_STATUS_META as STATUS_META,
+} from "../utils/order-status"
 
 export function MyOrdersView() {
   const { user: authUser, logout, isLoading: isAuthLoading } = useAuth()
@@ -82,6 +34,7 @@ export function MyOrdersView() {
   const [activeFilter, setActiveFilter] = useState<"ALL" | OrderStatus>("ALL")
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [cancelError, setCancelError] = useState<string | null>(null)
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null)
 
   const currentUser: User | null = useMemo(() => {
     if (!authUser) return null
@@ -135,6 +88,9 @@ export function MyOrdersView() {
       const updated = await OrderApiService.cancelOrder(orderId)
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? updated : o))
+      )
+      setDetailOrder((current) =>
+        current && current.id === orderId ? { ...current, ...updated } : current
       )
     } catch (error: any) {
       alert(error?.message || "Không thể hủy đơn hàng.")
@@ -288,7 +244,7 @@ export function MyOrdersView() {
                       </div>
                       <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-slate-500">
                         <CalendarClock className="size-3" />
-                        {formatDateTime(order.createdAt)}
+                        {formatOrderDateTime(order.createdAt)}
                       </p>
                     </div>
                     <span className="text-xs font-medium text-slate-500">
@@ -367,6 +323,14 @@ export function MyOrdersView() {
                         <span className="text-xs text-slate-500">
                           Tổng thanh toán
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => setDetailOrder(order)}
+                          className="inline-flex items-center gap-1 rounded-sm border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:border-primary hover:text-primary"
+                        >
+                          <ReceiptText className="size-3" />
+                          Xem chi tiết
+                        </button>
                         {(order.status === "PENDING" || order.status === "CONFIRMED") && (
                           <button
                             type="button"
@@ -392,6 +356,15 @@ export function MyOrdersView() {
           </div>
         )}
       </main>
+
+      {detailOrder ? (
+        <CustomerOrderDetailModal
+          order={detailOrder}
+          isCancelling={cancellingId === detailOrder.id}
+          onClose={() => setDetailOrder(null)}
+          onCancel={(order) => handleCancelOrder(order.id)}
+        />
+      ) : null}
 
       <SiteFooter />
     </div>

@@ -39,7 +39,6 @@ export interface Product {
   variants: ProductVariant[];
   ratingAvg?: number;
   reviewCount?: number;
-  commentCount?: number;
   createdAt: string;
   updatedAt: string;
 }

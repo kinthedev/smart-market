@@ -33,7 +33,6 @@ export interface ReviewStats {
 export interface ReviewSummary {
   ratingAvg: number;
   reviewCount: number;
-  commentCount: number;
   histogram: Record<string, number>;
   purchased: boolean;
   canReview: boolean;

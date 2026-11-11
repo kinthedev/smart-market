@@ -3,11 +3,10 @@ import { prisma } from "./prisma.js"
 export type ProductStats = {
 	ratingAvg: number
 	reviewCount: number
-	commentCount: number
 }
 
 /**
- * Gắn điểm đánh giá trung bình, số lượt đánh giá và số bình luận
+ * Gắn điểm đánh giá trung bình và số lượt đánh giá
  * vào danh sách sản phẩm (chỉ tính các mục không bị ẩn).
  */
 export async function withProductStats<T extends { id: string }>(
@@ -17,19 +16,12 @@ export async function withProductStats<T extends { id: string }>(
 
 	const ids = items.map((item) => item.id)
 
-	const [reviewGroups, commentGroups] = await Promise.all([
-		prisma.review.groupBy({
-			by: ["productId"],
-			where: { productId: { in: ids }, isHidden: false },
-			_avg: { rating: true },
-			_count: { _all: true },
-		}),
-		prisma.comment.groupBy({
-			by: ["productId"],
-			where: { productId: { in: ids }, isHidden: false },
-			_count: { _all: true },
-		}),
-	])
+	const reviewGroups = await prisma.review.groupBy({
+		by: ["productId"],
+		where: { productId: { in: ids }, isHidden: false },
+		_avg: { rating: true },
+		_count: { _all: true },
+	})
 
 	const reviewMap = new Map(
 		reviewGroups.map((group) => [
@@ -41,17 +33,12 @@ export async function withProductStats<T extends { id: string }>(
 		]),
 	)
 
-	const commentMap = new Map(
-		commentGroups.map((group) => [group.productId, group._count._all]),
-	)
-
 	return items.map((item) => {
 		const review = reviewMap.get(item.id)
 		return {
 			...item,
 			ratingAvg: review?.ratingAvg ?? 0,
 			reviewCount: review?.reviewCount ?? 0,
-			commentCount: commentMap.get(item.id) ?? 0,
 		}
 	})
 }

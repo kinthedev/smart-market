@@ -9,9 +9,9 @@ import uploadRouter from "./modules/upload/upload.route.js";
 import { orderRouter } from "./modules/order/order.route.js";
 import { wishlistRouter } from "./modules/wishlist/wishlist.route.js";
 import { reviewRouter } from "./modules/review/review.route.js";
-import { commentRouter } from "./modules/comment/comment.route.js";
 import { accountRouter } from "./modules/account/account.route.js";
 import { inventoryRouter } from "./modules/inventory/inventory.route.js";
+import { dashboardRouter } from "./modules/dashboard/dashboard.route.js";
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler.js";
 
 const app = express();
@@ -82,9 +82,9 @@ app.use("/api/v1", customerRouter);
 app.use("/api/v1", orderRouter);
 app.use("/api/v1", wishlistRouter);
 app.use("/api/v1", reviewRouter);
-app.use("/api/v1", commentRouter);
 app.use("/api/v1", accountRouter);
 app.use("/api/v1", inventoryRouter);
+app.use("/api/v1", dashboardRouter);
 app.use("/api/v1/upload", uploadRouter);
 
 // 7. 404 & Error Handling

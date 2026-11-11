@@ -23,7 +23,6 @@ import { useCart } from "@/src/features/cart/hooks/use-cart";
 import { buildCartItem } from "@/src/features/cart/utils/cart-item";
 import { WishlistButton } from "@/src/features/wishlist/components/wishlist-button";
 import { ReviewSection } from "@/src/features/reviews/components/review-section";
-import { CommentSection } from "@/src/features/comments/components/comment-section";
 import { ProductGrid } from "@/src/features/products/components/product-grid";
 import { LazySection } from "@/src/components/lazy-section";
 import type { User } from "@/src/data-seed/shop-data";
@@ -56,9 +55,9 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<
-    "description" | "reviews" | "comments"
-  >("description");
+  const [activeTab, setActiveTab] = useState<"description" | "reviews">(
+    "description"
+  );
   const [notice, setNotice] = useState("");
   const [noticeType, setNoticeType] = useState<"success" | "error">("success");
 
@@ -465,7 +464,7 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Mô tả, đánh giá & bình luận */}
+            {/* Mô tả & đánh giá */}
             <section className="mt-4 rounded-sm bg-white p-4 shadow-sm">
               <div className="flex flex-wrap gap-1 border-b border-slate-100">
                 {(
@@ -474,10 +473,6 @@ export default function ProductDetailPage() {
                     {
                       id: "reviews",
                       label: `Đánh giá (${product.reviewCount ?? 0})`,
-                    },
-                    {
-                      id: "comments",
-                      label: `Bình luận (${product.commentCount ?? 0})`,
                     },
                   ] as const
                 ).map((tab) => (
@@ -511,10 +506,6 @@ export default function ProductDetailPage() {
 
                 {activeTab === "reviews" ? (
                   <ReviewSection productId={product.id} />
-                ) : null}
-
-                {activeTab === "comments" ? (
-                  <CommentSection productId={product.id} />
                 ) : null}
               </div>
             </section>
