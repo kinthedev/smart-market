@@ -3,6 +3,15 @@ import { isAdminEmail } from "../../lib/admin.js"
 import { ReviewService } from "./review.service.js"
 
 export class ReviewController {
+	static async getMyReviews(req: Request, res: Response) {
+		try {
+			const reviews = await ReviewService.getMyReviews(req.user.id)
+			return res.status(200).json({ success: true, data: reviews })
+		} catch (error: any) {
+			return res.status(500).json({ success: false, message: error.message })
+		}
+	}
+
 	static async getReviews(req: Request, res: Response) {
 		try {
 			const result = await ReviewService.getReviews(

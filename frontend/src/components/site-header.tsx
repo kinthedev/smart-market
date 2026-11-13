@@ -193,14 +193,14 @@ export function SiteHeader({ user, onLogout, onSearch }: SiteHeaderProps) {
             </div>
 
             <div className="mx-auto flex max-w-7xl flex-wrap items-start gap-x-6 gap-y-2 px-4 pb-3 pt-2 md:flex-nowrap md:gap-x-10">
-                <a href="/" className="order-1 flex h-10 shrink-0 items-center gap-2" aria-label="CamMart - Trang chủ">
+                <Link href="/" className="order-1 flex h-10 shrink-0 items-center gap-2" aria-label="CamMart - Trang chủ">
                     <span className="flex size-9 items-center justify-center rounded-sm bg-white text-primary">
                         <ShoppingBag className="size-5" aria-hidden="true" />
                     </span>
                     <span className="text-2xl font-extrabold tracking-tight">
                         Smart<span className="text-yellow-300">Market</span>
                     </span>
-                </a>
+                </Link>
 
                 <div className="order-3 w-full md:order-2 md:w-auto md:flex-1">
                     <form

@@ -13,6 +13,24 @@ const userSelect = {
 }
 
 export class ReviewService {
+	static async getMyReviews(userId: string) {
+		return prisma.review.findMany({
+			where: { userId },
+			include: {
+				user: { select: userSelect },
+				product: {
+					select: {
+						id: true,
+						name: true,
+						slug: true,
+						images: { take: 1, select: { url: true } },
+					},
+				},
+			},
+			orderBy: { createdAt: "desc" },
+		})
+	}
+
 	/** Kiểm tra người dùng đã có đơn hàng hợp lệ chứa sản phẩm này chưa. */
 	static async hasPurchased(userId: string, productId: string) {
 		const item = await prisma.orderItem.findFirst({

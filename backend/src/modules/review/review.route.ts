@@ -9,6 +9,7 @@ import { CreateReviewSchema, UpdateReviewSchema } from "./review.schema.js"
 
 const router = Router()
 
+router.get("/reviews/my", authenticate, ReviewController.getMyReviews)
 router.get("/products/:productId/reviews", ReviewController.getReviews)
 router.get(
 	"/products/:productId/reviews/summary",

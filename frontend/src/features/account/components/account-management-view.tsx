@@ -76,6 +76,12 @@ export function AccountManagementView() {
     void loadAddresses()
   }, [authUser?.id])
 
+  useEffect(() => {
+    if (!authLoading && !authUser) {
+      router.replace("/login?callbackUrl=/account")
+    }
+  }, [authLoading, authUser, router])
+
   const defaultAddress = addresses.find((item) => item.isDefault) ?? null
   const suggestedPhone = (authUser as any)?.phone || ""
 
@@ -173,6 +179,14 @@ export function AccountManagementView() {
       icon: ShieldCheck,
     },
   ]
+
+  if (authLoading || !authUser) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-500">
+        Đang kiểm tra phiên đăng nhập...
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-foreground">

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { AuthService } from "../modules/auth/auth.service.js";
+import { isAdminEmail } from "../lib/admin.js";
 
 declare global {
   namespace Express {
@@ -48,5 +49,21 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
       message: "Xác thực không hợp lệ.",
     });
   }
+}
+
+/**
+ * Chỉ cho phép tài khoản Admin đi tiếp.
+ * Middleware này phải được đặt sau `authenticate` để `req.user` đã tồn tại.
+ */
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!isAdminEmail(req.user?.email)) {
+    return res.status(403).json({
+      success: false,
+      code: "FORBIDDEN",
+      message: "Không có quyền thực hiện thao tác này.",
+    });
+  }
+
+  return next();
 }
 
